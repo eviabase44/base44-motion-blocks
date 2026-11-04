@@ -1,0 +1,16 @@
+node_modules/
+.cache/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+coverage/
+test-results/
+playwright-report/
+assets/audio/
+assets/references/
+assets/fonts/Dazzed-SemiBold.ttf
+capture.html
+review.json
+reference-provenance.json

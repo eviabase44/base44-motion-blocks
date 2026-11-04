@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Motion blocks · Base44</title><link rel="stylesheet" href="studio.css"></head>
+<body><main id="studio">
+<header class="topbar"><a class="wordmark" href="./">Motion blocks<span> / 01</span></a><span class="build-tag">FIVE SHOTS · ONE APP PAYLOAD</span><a class="docs-link" href="README.md">Developer notes ↗</a></header>
+<section class="intro"><div><div class="eyebrow">PERSONALIZED VIDEO / WIREFRAME SYSTEM</div><h1>The motion stays.<br>The app changes.</h1></div><div class="source-picker"><label for="profile">App content</label><select id="profile"><option value="wireframe">Wireframe</option><option value="forma">Forma · Pilates</option><option value="atlas">Atlas · demo app</option></select><p>Swap the content, palette and type together.</p></div></section>
+<section class="url-import" id="url-import" aria-labelledby="import-title">
+<div class="import-heading"><h2 id="import-title">Your app. A 15-second video.</h2><span id="ai-provider">Checking AI connection…</span></div>
+<form id="url-form"><label for="app-url">Paste or drop a website or app URL</label><div class="url-row"><input id="app-url" type="text" inputmode="url" autocomplete="url" placeholder="Paste any public website or app URL" required maxlength="2048"><button id="generate-video" type="submit">Generate video ↗</button><button id="cancel-import" type="button" hidden>Cancel</button></div></form>
+<p class="import-hint">We capture the website’s real screens. AI matches its copy and brand to the existing card layouts. The Base44 ending stays fixed.</p>
+<p id="import-status" role="status" aria-live="polite" hidden></p>
+<p id="preview-connection-status" class="import-hint" hidden></p>
+<p id="preview-help" class="import-hint" hidden><a id="open-app-preview" target="_blank" rel="noopener">Open this app ↗</a> · Use its live website URL, or connect a preview using the developer option below.</p>
+<details id="preview-connection" class="preview-connection"><summary>Developer: connect a signed-in preview</summary><p>For a site that needs login, connect authorized app content and screenshots once. Supports any website or app URL. Screen files stay on this local server and are not sent to the AI provider.</p><label for="preview-snapshot">App snapshot JSON</label><textarea id="preview-snapshot" spellcheck="false" placeholder='{"url":"https://app.base44.com/apps/…/editor/preview","name":"Your app","text":"What your app does…"}'></textarea><label for="preview-screens">App screen captures (PNG or JPEG)</label><input id="preview-screens" type="file" accept="image/png,image/jpeg" multiple><button id="connect-preview" type="button">Connect preview</button><span id="preview-save-status" role="status"></span></details>
+<div id="import-result" hidden><div class="import-result-heading"><strong id="import-summary"></strong><button id="download-template" type="button">Export full template ↓</button></div><ol id="ai-decisions"></ol><ul id="import-warnings"></ul></div>
+</section>
+<nav id="shot-tabs" class="shot-tabs" aria-label="Choose a shot"></nav>
+<div class="workspace"><section class="preview-area">
+<div class="stage-bar"><div><span class="live-dot"></span><strong id="shot-title">Opening</strong><span class="shot-subtitle" id="shot-duration">3.00s</span></div><a id="isolate" href="?shot=hook&embed=1" target="_blank" rel="noopener">Open isolated ↗</a></div>
+<div id="stage" class="stage" aria-live="off"></div>
+<div class="transport"><button id="play" class="play-button" aria-label="Play shot">▶ <span>Play</span></button><button id="restart" aria-label="Restart shot">↺</button><input id="scrub" type="range" min="0" max="35" value="35" step="1" aria-label="Animation frame"><output id="time">2.92 / 3.00</output><label class="loop"><input type="checkbox" id="loop"> Loop</label></div>
+<div class="preview-footer"><div><button id="previous-frame" aria-label="Previous frame">←</button><span id="frame-count">FRAME 35 / 35</span><button id="next-frame" aria-label="Next frame">→</button></div><button id="full-sequence">Play full sequence <span>15s</span></button></div>
+<p class="shot-description" id="shot-description"></p>
+<p id="fixed-ending-note" class="fixed-ending-note" hidden>Fixed end card · Proudly built on Base44. This card stays the same in every sequence.</p>
+<div class="slot-key"><span><i style="background:#a9b8ee"></i> Replaceable image</span><span><i class="text-key">T</i> Live app text</span><span><i class="motion-key">↗</i> Fixed motion</span></div>
+<section class="overview"><div class="section-heading"><h2>Sequence cards</h2><span>SELECT TO PREVIEW</span></div><div id="thumbnails" class="thumbnails"></div></section>
+</section>
+<aside class="inspector"><div class="inspector-heading"><h2>App content</h2><span id="sync-status" role="status">Synced</span></div>
+<section class="identity"><label for="app-name">App name</label><input id="app-name" maxlength="24"><label for="font-family">App font</label><select id="font-family"><option value="Dazzed">Dazzed Semibold</option><option>Figtree</option><option>Georgia</option><option>Arial</option></select><div class="palette" id="palette"></div></section>
+<section class="content-section"><div class="section-heading"><h3 id="content-title">Opening copy</h3><span>EDIT LIVE</span></div><div id="content-fields"></div></section>
+<section class="content-section media-section"><div class="section-heading"><h3>Image placeholders</h3><span id="media-mode-label">COLOR BLOCKS</span></div><div id="media-fields"></div></section>
+<label class="media-toggle"><input id="wireframe-mode" type="checkbox" checked> Show images as wireframe blocks</label>
+<p class="error" id="error" role="alert" hidden></p>
+<details class="payload"><summary>App payload</summary><p>Replace this JSON to sync content from another app. The motion stays in its own module.</p><label for="payload-json" class="sr-only">App payload JSON</label><textarea id="payload-json" spellcheck="false"></textarea><div><button id="apply-json">Apply JSON</button><button id="download-json">Export JSON ↓</button></div></details>
+<p class="local-note">960 × 540 · 12 fps · 15 seconds.<br>Each card stays editable after generation.</p>
+</aside></div>
+<section id="layout-gallery" class="layout-gallery"><div class="section-heading"><h2>All card layouts</h2><div class="layout-heading-links"><span id="layout-count">17 LAYOUTS · 5 CARDS</span><a href="variants.html" target="_blank" rel="noopener">Open separately ↗</a></div></div><p class="gallery-description">Choose any layout to preview and edit it above. Each card keeps its selection for the full sequence.</p><div id="layout-options"></div></section>
+<footer>Base44 / reusable motion studies <span>CODE-DRIVEN · CONTENT-INDEPENDENT</span></footer>
+</main><script src="src/open-editor.js"></script></body></html>

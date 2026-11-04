@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "app": {
+    "name": "YOUR APP",
+    "kind": "app"
+  },
+  "theme": {
+    "primary": "#253fe6",
+    "surface": "#f2f1ed",
+    "onPrimary": "#ffffff",
+    "accent": "#fb784c",
+    "ink": "#172027",
+    "blocks": [
+      "#a9b8ee",
+      "#e4ad8f",
+      "#b9cbb6",
+      "#d2c2e2",
+      "#e4d58e",
+      "#a4c9ca"
+    ]
+  },
+  "typography": {
+    "family": "Dazzed",
+    "headlineWeight": 600,
+    "bodyWeight": 600,
+    "wordmarkWeight": 600,
+    "letterSpacingEm": -0.03,
+    "src": "https://media.base44.com/files/public/marketing-site-assets/fonts/dazzed/dazzed-semibold.woff2"
+  },
+  "copy": {
+    "hook": [
+      "I built",
+      "an app",
+      "that",
+      "connects",
+      "people",
+      "to ideas."
+    ],
+    "reveal": [
+      "Your",
+      "headline",
+      "And",
+      "another",
+      "benefit."
+    ],
+    "focus": [
+      "Show",
+      "one",
+      "feature",
+      "here"
+    ],
+    "category": "APP CATEGORY",
+    "detail": "FEATURE NAME \u00b7 APP CONTEXT"
+  },
+  "media": {
+    "hero": {
+      "label": "APP SCREEN",
+      "src": null
+    },
+    "features": [
+      {
+        "label": "FEATURE IMAGE 01",
+        "src": null
+      },
+      {
+        "label": "FEATURE IMAGE 02",
+        "src": null
+      },
+      {
+        "label": "FEATURE IMAGE 03",
+        "src": null
+      }
+    ]
+  },
+  "cards": [
+    {
+      "title": "Primary card",
+      "subtitle": "Replaceable content 01",
+      "media": {
+        "label": "IMAGE 01",
+        "src": null
+      }
+    },
+    {
+      "title": "Second card",
+      "subtitle": "Replaceable content 02",
+      "media": {
+        "label": "IMAGE 02",
+        "src": null
+      }
+    },
+    {
+      "title": "Feature card",
+      "subtitle": "Replaceable content 03",
+      "media": {
+        "label": "IMAGE 03",
+        "src": null
+      }
+    },
+    {
+      "title": "Key metric",
+      "subtitle": "Replaceable content 04",
+      "media": {
+        "label": "IMAGE 04",
+        "src": null
+      }
+    },
+    {
+      "title": "Call to action",
+      "subtitle": "Replaceable content 05",
+      "media": {
+        "label": "IMAGE 05",
+        "src": null
+      }
+    },
+    {
+      "title": "Wide image",
+      "subtitle": "Replaceable content 06",
+      "media": {
+        "label": "IMAGE 06",
+        "src": null
+      }
+    },
+    {
+      "title": "App identity",
+      "subtitle": "Replaceable content 07",
+      "media": {
+        "label": "IMAGE 07",
+        "src": null
+      }
+    },
+    {
+      "title": "Profile card",
+      "subtitle": "Replaceable content 08",
+      "media": {
+        "label": "IMAGE 08",
+        "src": null
+      }
+    },
+    {
+      "title": "Detail card",
+      "subtitle": "Replaceable content 09",
+      "media": {
+        "label": "IMAGE 09",
+        "src": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "app": {
+    "name": "FORMA",
+    "kind": "app"
+  },
+  "theme": {
+    "primary": "#006c3c",
+    "surface": "#fffce9",
+    "onPrimary": "#f0f4a9",
+    "accent": "#ff5414",
+    "ink": "#162d24",
+    "blocks": [
+      "#a5b99b",
+      "#e3ad8e",
+      "#c6d098",
+      "#9db6a4",
+      "#e1ce9a",
+      "#b9cba6"
+    ]
+  },
+  "typography": {
+    "family": "Dazzed",
+    "headlineWeight": 600,
+    "bodyWeight": 600,
+    "wordmarkWeight": 600,
+    "letterSpacingEm": -0.03,
+    "src": "https://media.base44.com/files/public/marketing-site-assets/fonts/dazzed/dazzed-semibold.woff2"
+  },
+  "copy": {
+    "hook": [
+      "I built",
+      "an app",
+      "that",
+      "books",
+      "Pilates",
+      "classes."
+    ],
+    "reveal": [
+      "Pilates",
+      "classes",
+      "And",
+      "private",
+      "sessions."
+    ],
+    "focus": [
+      "Book",
+      "a",
+      "class",
+      "today"
+    ],
+    "category": "PILATES CLASSES",
+    "detail": "REFORMER FLOW \u00b7 NORTH STUDIO"
+  },
+  "media": {
+    "hero": {
+      "label": "APP SCREEN",
+      "src": null
+    },
+    "features": [
+      {
+        "label": "Reformer Flow",
+        "src": null
+      },
+      {
+        "label": "Slow & Strong",
+        "src": null
+      },
+      {
+        "label": "Mat Foundations",
+        "src": null
+      }
+    ]
+  },
+  "cards": [
+    {
+      "title": "Reformer Flow",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 01",
+        "src": null
+      }
+    },
+    {
+      "title": "Slow & Strong",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 02",
+        "src": null
+      }
+    },
+    {
+      "title": "Mat Foundations",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 03",
+        "src": null
+      }
+    },
+    {
+      "title": "$28 / class",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 04",
+        "src": null
+      }
+    },
+    {
+      "title": "Book a class",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 05",
+        "src": null
+      }
+    },
+    {
+      "title": "The studio",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 06",
+        "src": null
+      }
+    },
+    {
+      "title": "FORMA",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 07",
+        "src": null
+      }
+    },
+    {
+      "title": "With Maya",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 08",
+        "src": null
+      }
+    },
+    {
+      "title": "Private sessions",
+      "subtitle": "Move at your own pace",
+      "media": {
+        "label": "IMAGE 09",
+        "src": null
+      }
+    }
+  ]
+}

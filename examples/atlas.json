@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "app": {
+    "name": "ATLAS",
+    "kind": "tool"
+  },
+  "theme": {
+    "primary": "#4b334d",
+    "surface": "#f6efe6",
+    "onPrimary": "#f5dace",
+    "accent": "#dd704f",
+    "ink": "#332734",
+    "blocks": [
+      "#ccafa5",
+      "#d9c291",
+      "#adbca6",
+      "#bdadc8",
+      "#d7b6a0",
+      "#aeb9c7"
+    ]
+  },
+  "typography": {
+    "family": "Dazzed",
+    "headlineWeight": 600,
+    "bodyWeight": 600,
+    "wordmarkWeight": 600,
+    "letterSpacingEm": -0.03,
+    "src": "https://media.base44.com/files/public/marketing-site-assets/fonts/dazzed/dazzed-semibold.woff2"
+  },
+  "copy": {
+    "hook": [
+      "I built",
+      "a tool",
+      "that",
+      "plans",
+      "better",
+      "weekends."
+    ],
+    "reveal": [
+      "Local",
+      "places",
+      "And",
+      "curated",
+      "weekends."
+    ],
+    "focus": [
+      "Find",
+      "your",
+      "place",
+      "today"
+    ],
+    "category": "WEEKEND PLANNER",
+    "detail": "NEARBY PLACES \u00b7 SAVED FOR LATER"
+  },
+  "media": {
+    "hero": {
+      "label": "APP SCREEN",
+      "src": null
+    },
+    "features": [
+      {
+        "label": "Coastal walk",
+        "src": null
+      },
+      {
+        "label": "Morning coffee",
+        "src": null
+      },
+      {
+        "label": "Hidden gardens",
+        "src": null
+      }
+    ]
+  },
+  "cards": [
+    {
+      "title": "Coastal walk",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 01",
+        "src": null
+      }
+    },
+    {
+      "title": "Morning coffee",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 02",
+        "src": null
+      }
+    },
+    {
+      "title": "Hidden gardens",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 03",
+        "src": null
+      }
+    },
+    {
+      "title": "12 saved spots",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 04",
+        "src": null
+      }
+    },
+    {
+      "title": "Plan a weekend",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 05",
+        "src": null
+      }
+    },
+    {
+      "title": "Around town",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 06",
+        "src": null
+      }
+    },
+    {
+      "title": "ATLAS",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 07",
+        "src": null
+      }
+    },
+    {
+      "title": "Local guides",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 08",
+        "src": null
+      }
+    },
+    {
+      "title": "Your next trip",
+      "subtitle": "Make time for somewhere new",
+      "media": {
+        "label": "IMAGE 09",
+        "src": null
+      }
+    }
+  ]
+}
