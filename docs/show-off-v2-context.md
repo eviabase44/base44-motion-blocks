@@ -91,6 +91,8 @@ Run meaningful automated checks for fixes, then review representative rendered f
 
 ## Verification at branch creation
 
+Follow-up: [initial execution audit, 2026-11-15](v2-baseline-audit.md) records the browser baseline and three reproduced editor failures. The broader matrix remains open.
+
 `npm test` passed **35/35** checks on 2026-11-15. This is a fresh Node-suite result. Browser-wide and external-URL tests were not rerun for this documentation-only branch creation. The existing browser harness is `/tests/browser.html` and covers all layout frames across the sample profiles; it is not a substitute for the broader import and visual-review matrix above.
 
 ## Working on this branch
