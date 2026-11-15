@@ -20,10 +20,22 @@
 <div class="preview-footer"><div><button id="previous-frame" aria-label="Previous frame">←</button><span id="frame-count">FRAME 35 / 35</span><button id="next-frame" aria-label="Next frame">→</button></div><button id="full-sequence">Play full sequence <span>15s</span></button></div>
 <p class="shot-description" id="shot-description"></p>
 <p id="fixed-ending-note" class="fixed-ending-note" hidden>Fixed end card · Proudly built on Base44. This card stays the same in every sequence.</p>
-<div class="slot-key"><span><i style="background:#a9b8ee"></i> Replaceable image</span><span><i class="text-key">T</i> Live app text</span><span><i class="motion-key">↗</i> Fixed motion</span></div>
+<div class="slot-key"><span><i style="background:#a9b8ee"></i> Replaceable image</span><span><i class="text-key">T</i> Live app text</span><span><i class="motion-key">↗</i> Editable motion</span></div>
 <section class="overview"><div class="section-heading"><h2>Sequence cards</h2><span>SELECT TO PREVIEW</span></div><div id="thumbnails" class="thumbnails"></div></section>
 </section>
 <aside class="inspector"><div class="inspector-heading"><h2>App content</h2><span id="sync-status" role="status">Synced</span></div>
+<section id="motion-panel" class="motion-panel" hidden aria-labelledby="motion-heading">
+<div class="section-heading"><h3 id="motion-heading">Animation · <span id="motion-shot"></span></h3><span id="motion-lock">MATCH CUTS</span></div>
+<p id="motion-cut" class="motion-note"></p>
+<div id="motion-fields"></div>
+<p id="motion-layout-note" class="motion-note" hidden>Legacy layouts are mixed into this sequence. Restore your Figma flow for matched joins throughout.</p>
+<button id="motion-use-figma" hidden>Restore Figma flow</button>
+<div class="motion-actions"><button id="motion-preview">↺ Replay shot</button><button id="motion-reset">Reset shot</button></div>
+<div class="motion-actions"><button id="motion-save" class="primary">Save tweaks</button><button id="motion-load">Load saved</button></div>
+<div class="motion-actions"><button id="motion-download">Download tweaks ↓</button><button id="motion-import">Import tweaks ↑</button><input id="motion-file" type="file" accept="application/json,.json" hidden></div>
+<p id="motion-status" class="motion-note" role="status" aria-live="polite"></p>
+<p class="motion-note">Save keeps all eight shots on this browser. Download a copy to reuse elsewhere. The full template includes your tweaks too.</p>
+</section>
 <section class="identity"><label for="app-name">App name</label><input id="app-name" maxlength="24"><label for="font-family">App font</label><select id="font-family"><option value="Dazzed">Dazzed Semibold</option><option>Figtree</option><option>Georgia</option><option>Arial</option></select><div class="palette" id="palette"></div></section>
 <section class="content-section"><div class="section-heading"><h3 id="content-title">Opening copy</h3><span>EDIT LIVE</span></div><div id="content-fields"></div></section>
 <section class="content-section media-section"><div class="section-heading"><h3>Image placeholders</h3><span id="media-mode-label">COLOR BLOCKS</span></div><div id="media-fields"></div></section>

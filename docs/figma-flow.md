@@ -23,12 +23,12 @@ The supplied Figma nodes returned no authored motion tracks. Timing is therefore
 
 - Opening: source-indexed word pops, a held frontal title, cursor approach/click, then a window that carries directly into the homepage shot.
 - Settling: a normalized `.74` decay over a declared interval, sampled on the existing 12 fps clock. This is not presented as a universal Base44 curve.
-- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The central component anchors the shot and lifts slightly as the cursor reaches it.
-- Features: short two-frame page entrances, word reveals, then stable readable holds. Observed hover regions can lift by four design pixels. This predicts emphasis over real pixels, not a recorded interaction or a change to the app.
-- Capabilities: the measured file-strip translation (`src/data/reference-tracks.js`) is remapped to subtle vertical grid movement; a hard cut exchanges the two supplied compositions halfway through the shot.
+- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The central component anchors the shot, then its crop opens back out to the full feature page.
+- Features: a fixed app window, word reveals, then stable readable holds. Observed hover regions can lift by four design pixels. This predicts emphasis over real pixels, not a recorded interaction or a change to the app.
+- Capabilities: the measured file-strip translation (`src/data/reference-tracks.js`) is remapped to subtle vertical grid movement; a continuous lateral move exchanges the two supplied compositions, avoiding an unmatched internal cut.
 - Ending: the B44-06 symbol-row/hold vocabulary, using the user's exact vectors. The symbols are held for five output frames before resolving to the fixed credit and logo.
 
-Camera Language and Eye Candy guide continuity: frontal app views, wide context before individual features, one pronounced bundle move, clear cuts, and a held ending. No invented 3D camera, generic transition pack or fake UI components are introduced.
+Camera Language and Eye Candy guide continuity: frontal app views, wide context before individual features, one shared match-cut grammar and a held ending. No invented 3D camera, generic transition pack or fake UI components are introduced.
 
 ## Host content
 
@@ -43,3 +43,40 @@ PUSHBOX is the local validation app. Its captures, soundtrack and simulated sele
 The browser harnesses cover every v2 layout/frame, exact cuts, media loading, update ordering and the unchanged original 15-second contract. Node tests cover source bounds, page fitting, selection and planner compatibility. Visual review uses the current local PUSHBOX pages and the source Figma states.
 
 This is a code implementation for design review, not a claim of brand approval or a live telemetry integration. Built-in MP4 export and automatic extraction of exact component/photography regions from every imported site are still separate work.
+
+## Match cuts and editable animation
+
+Every boundary in the eight-shot Figma flow has a shared rendered anchor. The renderer changes the context around the anchor; it does not crossfade between whole slides.
+
+| Join | Shared element |
+| --- | --- |
+| Opening → Homepage | Identical homepage viewport and corner positions |
+| Homepage → Bundle | The first feature component, centered in the 218 × 218 window |
+| Bundle → Feature 1 | That component expands back into its whole page at 182,154 / 630 × 364 |
+| Feature 1 → 2 → 3 | A graphic match on the same 630 × 364 app window; screen contents change |
+| Feature 3 → Capabilities | The full third page shrinks into the grid's first tile at 620,17 / 195 × 204 |
+| Capabilities → Ending | Tiles condense into the symbol row; the exact arrow and official logo remain fixed |
+
+The internal ending change also retains the same arrow and logo. Camera geometry stays frontal. Crops interpolate only between observed regions from the same asset; different assets blend **inside** a moving window before reaching the exact destination. Full feature pages always retain their aspect ratio. Optional looping is a playback restart, not an authored ending-to-opening join.
+
+Select a shot and use **Animation** in the inspector. Available controls depend on the shot: speed, secondary movement, word interval, page scroll distance, hover lift, exit move length, and ending symbol hold. Sliders update the current frame and replay the shot on release. The 19-second sequence length and shared cut poses stay locked. Speed retimes only the interior of a shot, preserving both endpoints. The fixed outro copy/logo remains unchanged.
+
+**Save tweaks** saves all shots in browser localStorage, keyed by app name. A clean reopening of the same app restores saved settings; an explicit template carrying `showcase.motion` takes precedence. **Load saved** discards unsaved motion edits. **Reset shot** resets only the current shot. **Download tweaks** and **Import tweaks** round-trip a small, versioned JSON preset with no app screenshots. Full payload/template exports also include the settings. Browser storage can be cleared, so download a preset for a durable backup. Saving locally does not commit changes to GitHub.
+
+Host API:
+
+```js
+player.setMotion({
+  version: 1,
+  shots: {
+    reveal: {tempo: 1.15, scroll: .8, hover: 6, joinFrames: 7},
+    focus2: {wordFrames: 1, hover: 3},
+    ending: {symbolFrames: 8}
+  }
+});
+const template = player.getPayload(); // includes showcase.motion
+```
+
+`src/v2/motion-settings.js` validates every field and range. Settings are independent by shot, including the three feature shots. Legacy gallery alternatives remain available but do not inherit the new Figma join contract; the inspector identifies mixed sequences and offers **Restore Figma flow**.
+
+`tests/v2-browser.html` compares the actual rendered anchor on both sides of all seven joins at default, minimum, maximum and mixed settings, checks all adjusted frames for invalid geometry, and verifies the internal ending match. Node tests cover preset persistence, isolation by app, corruption, reset behavior and source validation.

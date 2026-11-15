@@ -1,3 +1,4 @@
+import {validateMotion} from './motion-settings.js';
 // The v2 experiment accepts host-supplied observations. It never invents live telemetry.
 export const FPS = 12;
 export const BEATS = Object.freeze([
@@ -18,6 +19,7 @@ function requireText(value,name,max=120){if(typeof value!=='string'||!value.trim
 function region(r,m,name){if(!r||!['x','y','width','height'].every(k=>Number.isFinite(r[k]))||r.x<0||r.y<0||r.width<=0||r.height<=0||r.x+r.width>m.width+.01||r.y+r.height>m.height+.01)throw Error(`${name} must fit within its source image.`);}
 export function validateSource(input){
   const p=structuredClone(input);
+  if(p.motion!==undefined)p.motion=validateMotion(p.motion);
   if(p.version!==2)throw Error('This flow needs a version 2 source.');
   requireText(p.app?.name,'App name',48);requireText(p.description,'App description',150);
   if(!['simulated','provided'].includes(p.signalMode))throw Error('signalMode must be simulated or provided.');

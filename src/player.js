@@ -1,3 +1,4 @@
+import {validateMotion} from './v2/motion-settings.js';
 import {playbackShots,baseShot,renderShowcase,syncShowcase} from './showcase.js';
 import {preloadMedia} from './media.js';
 import {FPS,SHOTS,TOTAL_FRAMES,getShot,clampFrame,assertPayload} from './contracts.js';
@@ -72,6 +73,7 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
     setVariant(id,variant){getVariant(id,variant);renderShot(id,spec(id).frames-1,app,{wireframe,variant});layouts={...layouts,[id]:variant};draw();},
     setSound(value){sound=Boolean(value);syncAudio(true);},
     getVariants(){return {...layouts};},
+    setMotion(value){if(!app.showcase)throw Error('Animation controls require the v2 flow.');const motion=validateMotion(value);revision++;app={...app,showcase:{...app.showcase,motion}};draw();},
     async applyTemplate({payload,variants:nextVariants,wireframe:nextWireframe=wireframe}){const ticket=++revision,p=assertPayload(payload),next=normalizeVariants(nextVariants);await loadAppFont(p);if(p.showcase){syncShowcase(p);if(!nextWireframe)await preloadMedia(p);}if(disposed||ticket!==revision)return false;check(p,next);app=p;order=order.filter(id=>(playbackShots(p)??SHOTS).some(s=>s.id===id));if(!order.length)order=['hook'];total=order.reduce((n,id)=>n+spec(id).frames,0);frame=Math.min(frame,total-1);layouts=next;wireframe=Boolean(nextWireframe);draw();return true;},
     setWireframe(value){wireframe=Boolean(value);draw();},
     getWireframe(){return wireframe;},

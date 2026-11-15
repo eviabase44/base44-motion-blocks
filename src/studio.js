@@ -1,3 +1,4 @@
+import {connectMotionPanel,restoreSavedMotion} from './v2/motion-panel.js';
 import {SHOWCASE_SHOTS,baseShot,payloadFromShowcase,syncShowcase,addShowcaseToPayload} from './showcase.js';
 import {DAZZED_FONT_URL} from './brand.js';
 import {createMotionPlayer,renderShot,SHOTS,FPS,TOTAL_FRAMES} from './player.js';
@@ -9,9 +10,11 @@ import {connectURLImporter} from './importer.js';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
 let profile=['wireframe','forma','atlas','imported'].includes(params.get('app'))?params.get('app'):'wireframe';
 let selected=SHOTS.some(s=>s.id===params.get('shot'))?params.get('shot'):'hook',payload=makeProfile(profile==='imported'?'wireframe':profile),player,sequence=false,binding=0,importedMetadata=null;
+let motionPanel;
 let variants=decodeVariants();try{variants=decodeVariants(params.get('layouts')??'');}catch(e){showError(e);}
 try{const hash=new URLSearchParams(location.hash.slice(1)),encoded=hash.get('payload');if(encoded)payload=JSON.parse(encoded);if(hash.get('import'))importedMetadata=JSON.parse(hash.get('import'));}catch(e){showError(e);}
 if(!params.has('app')&&!location.hash&&!params.has('baseline')){try{const r=await fetch('/api/v2/local-source');if(r.ok){payload=payloadFromShowcase(await r.json());profile='imported';}else if(params.get('version')==='2'){payload=payloadFromShowcase(await (await fetch('./examples/v2-wireframe.json')).json());profile='imported';}}catch(e){showError(e);}}
+try{restoreSavedMotion(payload,localStorage);}catch(e){showError(e);}
 if(payload.showcase)profile='imported';
 let shots=payload.showcase?SHOWCASE_SHOTS:SHOTS;if(shots.some(s=>s.id===params.get('shot')))selected=params.get('shot');
 const currentShot=id=>shots.find(s=>s.id===id)??getShot(baseShot(id));
@@ -40,7 +43,7 @@ function signalFields(){
   for(const f of payload.showcase.features){const r=html('tr'),title=html('td',{},f.name),why=html('small',{},plan.decisions.find(d=>d.id===f.id).reason);title.append(why);r.append(title);for(const k of ['credits','visualRichness','viewport']){const cell=html('td'),input=html('input',{type:'number',min:0,max:k==='credits'?1e9:100,'aria-label':`${f.name} ${k}`,'data-feature':f.id,'data-signal':k});input.value=f.signals[k]===null?'':k==='viewport'?Math.round(f.signals[k]*100):f.signals[k];input.disabled=f.available===false;cell.append(input);r.append(cell);}body.append(r);}
   $('rebuild-features').onclick=async()=>{const next=structuredClone(payload);next.showcase.signalMode='simulated';for(const input of body.querySelectorAll('input')){const f=next.showcase.features.find(f=>f.id===input.dataset.feature),k=input.dataset.signal;f.signals[k]=input.value===''?null:Number(input.value)/(k==='viewport'?100:1);}await bind(next,{fields:true});};
 }
-function thumbnailFrame(id,variant='original'){return payload.showcase&&id==='hook'&&variant==='original'?18:currentShot(id).frames-1;}
+function thumbnailFrame(id,variant='original'){return payload.showcase&&variant==='original'?({hook:18,reveal:20,collage:12,focus:12,focus2:12,focus3:12,capabilities:12,ending:23})[id]:currentShot(id).frames-1;}
 function thumbnails(){for(const s of shots){const tile=$(`thumb-${s.id}`);tile.querySelector('.mini').replaceChildren(renderShot(s.id,thumbnailFrame(s.id,variants[s.id]),payload,{variant:variants[s.id],wireframe:player?.getWireframe()??true}));}}
 function layoutChoices(){
   const container=$('layout-options');container.replaceChildren();
@@ -71,7 +74,7 @@ function chooseVariant(shot,id){
 function syncIdentity(){$('app-name').value=payload.app.name;const family=payload.typography.family;if(![...$('font-family').options].some(o=>o.value===family))$('font-family').append(html('option',{value:family},family+' · imported'));$('font-family').value=family;if(profile==='imported'&&!$('profile-imported'))$('profile').append(html('option',{id:'profile-imported',value:'imported',disabled:''},payload.app.name+' · imported'));$('profile').value=profile;for(const k of ['primary','surface','onPrimary','accent','ink'])$(`color-${k}`).value=payload.theme[k];}
 async function bind(next,{fields=false}={}) {
   const ticket=++binding;$('sync-status').textContent='Syncing…';
-  try {const accepted=await player.update(next);if(!accepted||ticket!==binding)return;payload=player.getPayload();refreshSequence();clearError();thumbnails();layoutChoices();$('payload-json').value=JSON.stringify(portable(),null,2);updateLinks();persistImported();if(fields){syncIdentity();contentFields();}}
+  try {const accepted=await player.update(next);if(!accepted||ticket!==binding)return;payload=player.getPayload();refreshSequence();clearError();thumbnails();layoutChoices();$('payload-json').value=JSON.stringify(portable(),null,2);updateLinks();persistImported();if(fields){syncIdentity();contentFields();motionPanel?.refresh();}}
   catch(e){if(ticket===binding)showError(e);}
 }
 function mutate(change){const next=structuredClone(payload);change(next);return bind(next);}
@@ -99,7 +102,7 @@ function contentFields(){const s=currentShot(selected);$('content-title').textCo
   if(selected==='reveal'){media.append(mediaRow(payload.media.hero,0,(key,value)=>mutate(p=>{p.media.hero[key]=value;if(p.showcase)p.showcase.homepage[key]=value;})));if(payload.showcase)media.append(html('p',{class:'media-note'},'Scrolling stays within the supplied page. Add a full-page capture to show more sections. Hover motion is predicted from the selected component.'));}
   if(selected==='hook')media.append(html('p',{class:'media-note'},payload.showcase?'Your centered description opens into the homepage. Together with the scroll shot, the opening runs six seconds.':variants.hook==='karaoke'?'The media window uses the app reveal image.':'This shot is all live type. Its background and text colors come from the app palette.'));
 }
-function selectionUI(){const s=currentShot(selected);$('shot-title').textContent=s.name;$('shot-description').textContent=s.description;$('shot-duration').textContent=(s.frames/FPS).toFixed(2)+'s';for(const shot of shots){$(`tab-${shot.id}`).setAttribute('aria-selected',String(shot.id===selected));$(`thumb-${shot.id}`).setAttribute('aria-current',String(shot.id===selected));}contentFields();layoutChoices();updateLinks();}
+function selectionUI(){const s=currentShot(selected);$('shot-title').textContent=s.name;$('shot-description').textContent=s.description;$('shot-duration').textContent=(s.frames/FPS).toFixed(2)+'s';for(const shot of shots){$(`tab-${shot.id}`).setAttribute('aria-selected',String(shot.id===selected));$(`thumb-${shot.id}`).setAttribute('aria-current',String(shot.id===selected));}contentFields();layoutChoices();updateLinks();motionPanel?.refresh();}
 function onFrame(state){if(state.shot!==selected){selected=state.shot;selectionUI();}$('scrub').max=state.totalFrames-1;$('scrub').value=state.frame;$('time').value=`${state.seconds.toFixed(2)} / ${state.duration.toFixed(2)}`;$('frame-count').textContent=`FRAME ${String(state.frame).padStart(2,'0')} / ${state.totalFrames-1}`;$('play').innerText=state.playing?'Ⅱ Pause':'▶ Play';$('play').setAttribute('aria-label',state.playing?'Pause shot':'Play shot');$('loop').checked=state.loop;$('shot-duration').textContent=sequence?state.duration.toFixed(2)+'s sequence':(currentShot(selected).frames/FPS).toFixed(2)+'s';}
 function choose(id,play=true){sequence=false;selected=id;player.setShot(id);selectionUI();const url=new URL(location.href);url.searchParams.set('shot',id);url.searchParams.set('app',profile);history.replaceState(null,'',url);if(play)player.play();else player.seekFrame(currentShot(id).frames-1);}
 function buildSequenceControls(){
@@ -117,6 +120,10 @@ try {
   let initialMediaError;
   if(!wireframe)try{await preloadMedia(payload);}catch(error){initialMediaError=error;}
   player=await createMotionPlayer($('stage'),{payload,shot:selected,variants,wireframe,onFrame});persistMediaMode();$('showcase-sound').hidden=!payload.showcase;$('sound').onchange=()=>player.setSound($('sound').checked);
+  motionPanel=connectMotionPanel({getPayload:()=>payload,getShot:()=>currentShot(selected),getVariant:id=>variants[id]??'original',storage:localStorage,
+    applyMotion(motion){player.pause();player.setMotion(motion);payload=player.getPayload();$('payload-json').value=JSON.stringify(portable(),null,2);persistImported();updateLinks();},
+    preview(){sequence=false;player.setShot(selected);player.play();thumbnails();},useFigma(){for(const s of shots)player.setVariant(s.id,'original');chooseVariant(selected,'original');}
+  });
   refreshSequence();syncIdentity();selectionUI();thumbnails();persistImported();$('payload-json').value=JSON.stringify(portable(),null,2);
   if(embed){player.setLoop(true);player.play();}else player.seekFrame(currentShot(selected).frames-1);
   $('play').onclick=()=>player.getState().playing?player.pause():player.play();

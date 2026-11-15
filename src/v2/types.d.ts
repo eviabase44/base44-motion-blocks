@@ -1,3 +1,5 @@
+export interface ShotMotion {tempo?:number;movement?:number;joinFrames?:number;wordFrames?:number;scroll?:number;hover?:number;symbolFrames?:number}
+export interface MotionSettings {version:1;shots:Partial<Record<'hook'|'reveal'|'collage'|'focus'|'focus2'|'focus3'|'capabilities'|'ending',ShotMotion>>}
 export interface Region {x:number;y:number;width:number;height:number}
 export interface ObservedMedia {src:string;width:number;height:number;region?:Region;hover?:Region}
 export interface FeatureObservation {
@@ -9,7 +11,7 @@ export interface ShowcaseSource {
   version:2;signalMode:'simulated'|'provided';
   app:{name:string;kind?:'app'|'agent'|'website'|'tool'};
   description:string;
-  benefit?:string;images?:ObservedMedia[];
+  benefit?:string;images?:ObservedMedia[];motion?:MotionSettings;
   copy?:{hook?:[string,string,string,string,string,string];reveal?:[string,string,string,string,string];focus?:[string,string,string,string];category?:string;detail?:string};
   theme:{primary:string;accent:string;surface:string;ink:string;onPrimary:string;blocks?:string[]};
   typography:{family:string;src?:string|null;headlineWeight:number;bodyWeight:number;wordmarkWeight:number;letterSpacingEm?:number};

@@ -1,4 +1,4 @@
-import type {ShowcaseSource, Region} from './v2/types.js';
+import type {ShowcaseSource, Region, MotionSettings} from './v2/types.js';
 export type BaseShotId = 'hook' | 'reveal' | 'collage' | 'focus' | 'ending';
 export type ShotId = BaseShotId | 'focus2' | 'focus3' | 'capabilities';
 type FocusVariant = 'original'|'diagonal-window'|'six-week'|'six-day';
@@ -22,7 +22,7 @@ export interface MotionPlayer {
   setLoop(value:boolean):void; setSequence(ids:ShotId[]):void; setShot(id:ShotId):void;
   setVariant<S extends ShotId>(id:S,variant:VariantByShot[S]):void; getVariants():VariantSelection;
   applyTemplate(template:{payload:AppPayload;variants:VariantSelection;wireframe?:boolean}):Promise<boolean>;
-  setWireframe(value:boolean):void; getWireframe():boolean; setSound(value:boolean):void;
+  setWireframe(value:boolean):void; getWireframe():boolean; setSound(value:boolean):void; setMotion(value:MotionSettings):void;
   update(payload:AppPayload):Promise<boolean>; getPayload():AppPayload; getState():FrameState; destroy():void;
 }
 export function createMotionPlayer(container:HTMLElement,options:{payload:AppPayload;shot?:ShotId;sequence?:ShotId[];variants?:VariantSelection;wireframe?:boolean;onFrame?:(state:FrameState)=>void;onError?:(error:Error)=>void}):Promise<MotionPlayer>;
