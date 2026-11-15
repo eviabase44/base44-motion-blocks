@@ -4,6 +4,8 @@ A code-based editor for personalized, 15-second app showcase videos. Five indepe
 
 This repository contains the screenshot-based version and original preset compositions. It does not contain the reverted simulated app components or adaptive layout experiment.
 
+**Show off v2:** See the [branch context and broader test plan](docs/show-off-v2-context.md) for the design decisions, implementation map, known execution issues, and regression cases carried into this development branch.
+
 ## Run locally
 
 Use Node.js 22 or 24.
