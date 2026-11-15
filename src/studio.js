@@ -11,7 +11,7 @@ let profile=['wireframe','forma','atlas','imported'].includes(params.get('app'))
 let selected=SHOTS.some(s=>s.id===params.get('shot'))?params.get('shot'):'hook',payload=makeProfile(profile==='imported'?'wireframe':profile),player,sequence=false,binding=0,importedMetadata=null;
 let variants=decodeVariants();try{variants=decodeVariants(params.get('layouts')??'');}catch(e){showError(e);}
 try{const hash=new URLSearchParams(location.hash.slice(1)),encoded=hash.get('payload');if(encoded)payload=JSON.parse(encoded);if(hash.get('import'))importedMetadata=JSON.parse(hash.get('import'));}catch(e){showError(e);}
-if(!params.has('app')&&!location.hash&&!params.has('baseline')){try{const r=await fetch('/api/v2/local-source');if(r.ok){payload=payloadFromShowcase(await r.json());profile='imported';variants={...variants,reveal:'screen-stage'};}else if(params.get('version')==='2'){payload=payloadFromShowcase(await (await fetch('./examples/v2-wireframe.json')).json());profile='imported';}}catch(e){showError(e);}}
+if(!params.has('app')&&!location.hash&&!params.has('baseline')){try{const r=await fetch('/api/v2/local-source');if(r.ok){payload=payloadFromShowcase(await r.json());profile='imported';}else if(params.get('version')==='2'){payload=payloadFromShowcase(await (await fetch('./examples/v2-wireframe.json')).json());profile='imported';}}catch(e){showError(e);}}
 if(payload.showcase)profile='imported';
 let shots=payload.showcase?SHOWCASE_SHOTS:SHOTS;if(shots.some(s=>s.id===params.get('shot')))selected=params.get('shot');
 const currentShot=id=>shots.find(s=>s.id===id)??getShot(baseShot(id));
@@ -26,7 +26,7 @@ function updateLinks(){const url=new URL(location.href);url.search='';url.search
 function refreshSequence(){
   const next=payload.showcase?SHOWCASE_SHOTS:SHOTS;
   if(next!==shots){shots=next;selected=shots.some(s=>s.id===selected)?selected:'hook';buildSequenceControls();}
-  document.querySelector('.build-tag').textContent=payload.showcase?'SHOW OFF V2 · 7 SHOTS':'FIVE SHOTS · ONE APP PAYLOAD';
+  document.querySelector('.build-tag').textContent=payload.showcase?'SHOW OFF V2 · 8 SHOTS':'FIVE SHOTS · ONE APP PAYLOAD';
   $('full-sequence').innerHTML='Play full sequence <span>'+((shots.reduce((n,s)=>n+s.frames,0))/FPS)+'s</span>';
   $('import-title').textContent=payload.showcase?'Your app. A 19-second video.':'Your app. A 15-second video.';
   $('showcase-sound').hidden=!payload.showcase?.audio;
@@ -40,21 +40,22 @@ function signalFields(){
   for(const f of payload.showcase.features){const r=html('tr'),title=html('td',{},f.name),why=html('small',{},plan.decisions.find(d=>d.id===f.id).reason);title.append(why);r.append(title);for(const k of ['credits','visualRichness','viewport']){const cell=html('td'),input=html('input',{type:'number',min:0,max:k==='credits'?1e9:100,'aria-label':`${f.name} ${k}`,'data-feature':f.id,'data-signal':k});input.value=f.signals[k]===null?'':k==='viewport'?Math.round(f.signals[k]*100):f.signals[k];input.disabled=f.available===false;cell.append(input);r.append(cell);}body.append(r);}
   $('rebuild-features').onclick=async()=>{const next=structuredClone(payload);next.showcase.signalMode='simulated';for(const input of body.querySelectorAll('input')){const f=next.showcase.features.find(f=>f.id===input.dataset.feature),k=input.dataset.signal;f.signals[k]=input.value===''?null:Number(input.value)/(k==='viewport'?100:1);}await bind(next,{fields:true});};
 }
-function thumbnails(){for(const s of shots){const tile=$(`thumb-${s.id}`);tile.querySelector('.mini').replaceChildren(renderShot(s.id,s.frames-1,payload,{variant:variants[s.id],wireframe:player?.getWireframe()??true}));}}
+function thumbnailFrame(id,variant='original'){return payload.showcase&&id==='hook'&&variant==='original'?18:currentShot(id).frames-1;}
+function thumbnails(){for(const s of shots){const tile=$(`thumb-${s.id}`);tile.querySelector('.mini').replaceChildren(renderShot(s.id,thumbnailFrame(s.id,variants[s.id]),payload,{variant:variants[s.id],wireframe:player?.getWireframe()??true}));}}
 function layoutChoices(){
   const container=$('layout-options');container.replaceChildren();
-  $('layout-count').textContent=payload.showcase?'17 LAYOUTS · 7 SHOTS':'17 LAYOUTS · 5 CARDS';
+  $('layout-count').textContent=payload.showcase?'FIGMA FLOW · 8 SHOTS':'17 LAYOUTS · 5 CARDS';
   $('fixed-ending-note').hidden=selected!=='ending';
-  for(const [index,originalShot] of SHOTS.entries()){
-    const shot=originalShot.id==='focus'&&baseShot(selected)==='focus'?{...originalShot,id:selected}:originalShot;
+  for(const [index,originalShot] of (payload.showcase?shots:SHOTS).entries()){
+    const shot=!payload.showcase&&originalShot.id==='focus'&&baseShot(selected)==='focus'?{...originalShot,id:selected}:originalShot;
     const section=html('section',{class:'layout-group','data-shot-group':shot.id,'aria-labelledby':`layout-heading-${shot.id}`});
     const heading=html('div',{class:'section-heading layout-group-heading'}),grid=html('div',{class:'layout-options'});
-    heading.append(html('h3',{id:`layout-heading-${shot.id}`},`${String(index+1).padStart(2,'0')} / ${shot.name}`),html('span',{},`${selected===shot.id?'EDITING · ':''}${shot.id==='ending'?'FIXED END CARD':'4 LAYOUTS'}`));
+    heading.append(html('h3',{id:`layout-heading-${shot.id}`},`${String(index+1).padStart(2,'0')} / ${shot.name}`),html('span',{},`${selected===shot.id?'EDITING · ':''}${shot.id==='ending'?'FIXED END CARD':shot.id==='capabilities'?'FIGMA LAYOUT':'4 LAYOUTS'}`));
     for(const v of SHOT_VARIANTS[baseShot(shot.id)]){
       const button=html('button',{class:'layout-option','data-shot':shot.id,'data-layout':v.id,'aria-label':`${shot.name} · ${v.name} layout`,'aria-pressed':String((variants[shot.id]??'original')===v.id),'data-active':String(selected===shot.id&&variants[shot.id]===v.id)}),mini=html('div',{class:'mini'});
-      try{mini.append(renderShot(shot.id,currentShot(shot.id).frames-1,payload,{variant:v.id,wireframe:player?.getWireframe()??true}));}
+      try{mini.append(renderShot(shot.id,thumbnailFrame(shot.id,v.id),payload,{variant:v.id,wireframe:player?.getWireframe()??true}));}
       catch(e){button.disabled=true;button.title=e.message;mini.append(html('p',{class:'layout-error'},'Shorten copy to use this layout'));}
-      button.append(mini,html('strong',{},v.name),html('span',{},v.description));button.onclick=()=>chooseVariant(shot.id,v.id);grid.append(button);
+      button.append(mini,html('strong',{},payload.showcase&&v.id==='original'?'Your Figma layout':v.name),html('span',{},payload.showcase&&v.id==='original'?currentShot(shot.id).description:v.description));button.onclick=()=>chooseVariant(shot.id,v.id);grid.append(button);
       if(v.source&&!button.disabled)button.title=`${v.source.video} · source frames ${v.source.frames.join('–')}`;
     }
     section.append(heading,grid);container.append(section);
@@ -81,20 +82,22 @@ function contentFields(){const s=currentShot(selected);$('content-title').textCo
   const key={hook:'hook',reveal:'reveal',focus:'focus'}[selected];
   if(payload.showcase&&selected==='hook'){fields.append(inputField('App description',payload.showcase.description,value=>mutate(p=>{p.showcase.description=value;}),150));}
   else if(payload.showcase&&baseShot(selected)==='focus'){const i=selected==='focus2'?1:selected==='focus3'?2:0,f=syncShowcase(payload).selected[i];fields.append(inputField('Feature title',f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90));fields.append(html('p',{class:'media-note'},f.name+' · title and media stay paired by feature ID.'));}
-  else if(key){const grid=html('div',{class:'field-grid'}),labels=key==='hook'?['Intro','App type','Connector','Benefit','Subject','Outcome']:key==='reveal'?['Line 1 · A','Line 1 · B','Line 2 · A','Line 2 · B','Line 3']:['Top word','Middle · A','Middle · B','Bottom word'];payload.copy[key].forEach((v,i)=>grid.append(inputField(labels[i],v,value=>mutate(p=>{p.copy[key][i]=value;}),key==='focus'?12:key==='reveal'?20:22)));fields.append(grid);}
-  if(payload.showcase&&selected==='collage'){syncShowcase(payload).selected.forEach(f=>fields.append(inputField(f.name,f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90)));media.append(html('p',{class:'media-note'},'The feature bundle uses the selected features on the original card paths.'));}
+  else if(payload.showcase&&selected==='capabilities'){fields.append(inputField('Benefit',payload.showcase.benefit??'',value=>mutate(p=>{if(value.trim())p.showcase.benefit=value;else delete p.showcase.benefit;}),100));media.append(html('p',{class:'media-note'},`${payload.showcase.images?.length??0} app images, mixed with the selected features. Images remain separate from page captures.`));}
+  else if(key&&!(payload.showcase&&selected==='reveal'&&variants.reveal==='original')){const grid=html('div',{class:'field-grid'}),labels=key==='hook'?['Intro','App type','Connector','Benefit','Subject','Outcome']:key==='reveal'?['Line 1 · A','Line 1 · B','Line 2 · A','Line 2 · B','Line 3']:['Top word','Middle · A','Middle · B','Bottom word'];payload.copy[key].forEach((v,i)=>grid.append(inputField(labels[i],v,value=>mutate(p=>{p.copy[key][i]=value;}),key==='focus'?12:key==='reveal'?20:22)));fields.append(grid);}
+  if(payload.showcase&&selected==='collage'){syncShowcase(payload).selected.forEach(f=>fields.append(inputField(f.name,f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90)));media.append(html('p',{class:'media-note'},'The center card anchors the selected features and actual app images. All media retains its source proportions.'));}
   else if(selected==='collage')payload.cards.forEach((c,i)=>{fields.append(inputField(`Card ${String(i+1).padStart(2,'0')}`,c.title,value=>mutate(p=>{p.cards[i].title=value;}),34));media.append(mediaRow(c.media,i,(key,value)=>mutate(p=>{p.cards[i].media[key]=value;}),[3,4,6].includes(i)));});
   if(baseShot(selected)==='focus'&&!payload.showcase)fields.append(inputField('Feature context',payload.copy.detail,value=>mutate(p=>{p.copy.detail=value;}),55));
-  if(selected==='ending')fields.append(html('p',{class:'media-note'},'“Proudly built on” above the Base44 symbol and wordmark. Colors and typography follow the selected app.'));
+  if(selected==='ending')fields.append(html('p',{class:'media-note'},payload.showcase?'Your Figma symbol row resolves into the single-line Proudly built on Base44 lockup.':'“Proudly built on” above the Base44 symbol and wordmark.'));
   if(baseShot(selected)==='focus'){
     const feature=payload.showcase?syncShowcase(payload).selected[selected==='focus2'?1:selected==='focus3'?2:0]:null;
-    const images=feature?[{...feature.media,label:feature.name}]:getFeatureMedia(payload);
-    if(feature)media.append(html('p',{class:'media-note'},'This shot uses '+feature.name+'. Its aspect ratio follows the app component.'));
+    const usePage=feature?.page&&(variants[selected]??'original')==='original';
+    const images=feature?[{...(usePage?feature.page:feature.media),label:feature.name}]:getFeatureMedia(payload);
+    if(feature)media.append(html('p',{class:'media-note'},'This shot uses '+feature.name+'. Its aspect ratio follows the supplied '+(usePage?'page.':'component.')));
     if(images.length===3)media.append(html('p',{class:'media-note'},'Three images scroll upward in order, one at a time.'));
-    images.forEach((m,i)=>media.append(mediaRow(m,i+1,(key,value)=>mutate(p=>{if(feature){const f=p.showcase.features.find(f=>f.id===feature.id);if(key==='label')f.name=value;else f.media[key]=value;}else getFeatureMedia(p)[i][key]=value;}))));
+    images.forEach((m,i)=>media.append(mediaRow(m,i+1,(key,value)=>mutate(p=>{if(feature){const f=p.showcase.features.find(f=>f.id===feature.id);if(key==='label')f.name=value;else (usePage?f.page:f.media)[key]=value;}else getFeatureMedia(p)[i][key]=value;}))));
   }
-  if(selected==='reveal')media.append(mediaRow(payload.media.hero,0,(key,value)=>mutate(p=>{p.media.hero[key]=value;})));
-  if(selected==='hook')media.append(html('p',{class:'media-note'},payload.showcase?'The 6-second reference opening clicks into your app, then shows this description.':variants.hook==='karaoke'?'The media window uses the app reveal image.':'This shot is all live type. Its background and text colors come from the app palette.'));
+  if(selected==='reveal'){media.append(mediaRow(payload.media.hero,0,(key,value)=>mutate(p=>{p.media.hero[key]=value;if(p.showcase)p.showcase.homepage[key]=value;})));if(payload.showcase)media.append(html('p',{class:'media-note'},'Scrolling stays within the supplied page. Add a full-page capture to show more sections. Hover motion is predicted from the selected component.'));}
+  if(selected==='hook')media.append(html('p',{class:'media-note'},payload.showcase?'Your centered description opens into the homepage. Together with the scroll shot, the opening runs six seconds.':variants.hook==='karaoke'?'The media window uses the app reveal image.':'This shot is all live type. Its background and text colors come from the app palette.'));
 }
 function selectionUI(){const s=currentShot(selected);$('shot-title').textContent=s.name;$('shot-description').textContent=s.description;$('shot-duration').textContent=(s.frames/FPS).toFixed(2)+'s';for(const shot of shots){$(`tab-${shot.id}`).setAttribute('aria-selected',String(shot.id===selected));$(`thumb-${shot.id}`).setAttribute('aria-current',String(shot.id===selected));}contentFields();layoutChoices();updateLinks();}
 function onFrame(state){if(state.shot!==selected){selected=state.shot;selectionUI();}$('scrub').max=state.totalFrames-1;$('scrub').value=state.frame;$('time').value=`${state.seconds.toFixed(2)} / ${state.duration.toFixed(2)}`;$('frame-count').textContent=`FRAME ${String(state.frame).padStart(2,'0')} / ${state.totalFrames-1}`;$('play').innerText=state.playing?'Ⅱ Pause':'▶ Play';$('play').setAttribute('aria-label',state.playing?'Pause shot':'Play shot');$('loop').checked=state.loop;$('shot-duration').textContent=sequence?state.duration.toFixed(2)+'s sequence':(currentShot(selected).frames/FPS).toFixed(2)+'s';}
@@ -132,7 +135,7 @@ try {
   const importer=connectURLImporter({
     getTemplate:()=>({payload:portable(),variants:player.getVariants(),wireframe:player.getWireframe()}),
     async applyTemplate(result){
-      if(payload.showcase){result.payload=await addShowcaseToPayload(result.payload);result.duration=19;result.warnings.push('V2 feature signals are simulated for this test.');}
+      if(payload.showcase){result.payload=await addShowcaseToPayload(result.payload);result.variants=decodeVariants();result.duration=19;result.warnings.push('V2 feature signals are simulated for this test.');}
       await preloadMedia(result.payload);player.pause();++binding;
       try{if(!await player.applyTemplate({...result,wireframe:false}))throw Error('A newer edit replaced this import. Generate again when ready.');}
       catch(error){if(!error.message.startsWith('Cannot load app font'))throw error;result.warnings.push(`${result.payload.typography.family} could not load. Dazzed Semibold is used.`);result.payload.typography={family:'Dazzed',src:DAZZED_FONT_URL,headlineWeight:600,bodyWeight:600,wordmarkWeight:600,letterSpacingEm:-.03};await player.applyTemplate({...result,wireframe:false});}

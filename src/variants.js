@@ -243,16 +243,17 @@ export const SHOT_VARIANTS={
   ]
 };
 
+SHOT_VARIANTS.capabilities=[{id:'original',name:'Figma capability grid',description:'The supplied left and right arrangements, with app images and feature cards.'}];
 export function getVariant(shot,id='original'){
   const family=shot==='focus2'||shot==='focus3'?'focus':shot;
-  getShot(family);
+  if(family!=='capabilities')getShot(family);
   const variant=SHOT_VARIANTS[family].find(v=>v.id===id);
   if(!variant)throw new Error(`Unknown layout ${id} for ${shot}`);
   return variant;
 }
 export function normalizeVariants(variants={}){
   for(const [shot,id]of Object.entries(variants))getVariant(shot,id);
-  return {...Object.fromEntries(SHOTS.map(s=>[s.id,variants[s.id]??'original'])),...Object.fromEntries(['focus2','focus3'].filter(id=>variants[id]).map(id=>[id,variants[id]]))};
+  return {...Object.fromEntries(SHOTS.map(s=>[s.id,variants[s.id]??'original'])),...Object.fromEntries(['focus2','focus3','capabilities'].filter(id=>variants[id]).map(id=>[id,variants[id]]))};
 }
 export function encodeVariants(variants){
   return Object.entries(normalizeVariants(variants)).filter(([,id])=>id!=='original').map(([shot,id])=>`${shot}:${id}`).join(',');

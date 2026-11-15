@@ -1,5 +1,8 @@
 # Show off v2
 
+> Current revision (2026-11-15): the user's edited Figma frames now drive the default v2 flow. See [Figma flow](figma-flow.md) and [current timing/integration](v2-experiment.md). Historical decisions below describe the earlier baseline.
+
+
 Context and testing handoff, created **2026-11-15**. Git branch: `show-off-v2`.
 
 ## Starting point

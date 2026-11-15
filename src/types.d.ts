@@ -1,8 +1,8 @@
 import type {ShowcaseSource, Region} from './v2/types.js';
 export type BaseShotId = 'hook' | 'reveal' | 'collage' | 'focus' | 'ending';
-export type ShotId = BaseShotId | 'focus2' | 'focus3';
+export type ShotId = BaseShotId | 'focus2' | 'focus3' | 'capabilities';
 type FocusVariant = 'original'|'diagonal-window'|'six-week'|'six-day';
-export interface VariantByShot {hook:'original'|'agency-line'|'dark-statement'|'karaoke';reveal:'original'|'screen-stage'|'echo-right'|'echo-left';collage:'original'|'fragment-field'|'file-strip'|'echo-collage';focus:FocusVariant;focus2:FocusVariant;focus3:FocusVariant;ending:'original'}
+export interface VariantByShot {hook:'original'|'agency-line'|'dark-statement'|'karaoke';reveal:'original'|'screen-stage'|'echo-right'|'echo-left';collage:'original'|'fragment-field'|'file-strip'|'echo-collage';focus:FocusVariant;focus2:FocusVariant;focus3:FocusVariant;capabilities:'original';ending:'original'}
 export type VariantId = VariantByShot[ShotId];
 export type VariantSelection = Partial<VariantByShot>;
 export type MediaSlot = {label:string; color?:string; src:string|null; width?:number; height?:number; region?:Region; hover?:Region; fit?:'contain'};

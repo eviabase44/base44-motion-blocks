@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {planSequence,rankFeatures,BEATS,TOTAL_FRAMES,FPS,locateFrame,fitRect,scrollRegion,validateSource} from '../src/v2/model.js';
+import {pageRegion} from '../src/v2/figma-flow.js';
 const fixture=JSON.parse(await readFile(new URL('../examples/v2-wireframe.json',import.meta.url)));
 const fresh=()=>structuredClone(fixture);
-test('v2 uses seven contiguous beats with a six-second opener totaling 19 seconds',()=>{assert.equal(TOTAL_FRAMES/FPS,19);assert.equal(BEATS.length,7);for(let i=0;i<BEATS.length;i++){const b=BEATS[i];assert.equal(locateFrame(b.start).beat.id,b.id);assert.equal(locateFrame(b.start+b.frames-1).beat.id,b.id);if(i)assert.equal(b.start,BEATS[i-1].start+BEATS[i-1].frames);}assert.equal(locateFrame(99999).frame,TOTAL_FRAMES-1);});
+test('v2 uses eight contiguous beats with a six-second opening and homepage totaling 19 seconds',()=>{assert.equal(TOTAL_FRAMES/FPS,19);assert.equal(BEATS.length,8);for(let i=0;i<BEATS.length;i++){const b=BEATS[i];assert.equal(locateFrame(b.start).beat.id,b.id);assert.equal(locateFrame(b.start+b.frames-1).beat.id,b.id);if(i)assert.equal(b.start,BEATS[i-1].start+BEATS[i-1].frames);}assert.equal(locateFrame(99999).frame,TOTAL_FRAMES-1);});
 test('credit hierarchy cannot be overturned by secondary signals',()=>{const p=fresh();p.features[0].signals={credits:11,visualRichness:0,viewport:0};p.features[1].signals={credits:10,visualRichness:100,viewport:1};assert.equal(rankFeatures(p).selected[0].id,'feature-3');assert.equal(rankFeatures(p).selected[1].id,'feature-1');});
 test('visual richness breaks credit ties before viewport prominence',()=>{const p=fresh();p.features.forEach(f=>f.signals.credits=10);p.features[0].signals={credits:10,visualRichness:90,viewport:.2};p.features[1].signals={credits:10,visualRichness:80,viewport:.99};assert.equal(rankFeatures(p).selected[0].id,'feature-1');});
 test('viewport threshold is strictly above sixty percent',()=>{const p=fresh();p.features.forEach(f=>f.signals={credits:10,visualRichness:10,viewport:.6});p.features[2].signals.viewport=.61;assert.equal(rankFeatures(p).selected[0].id,'feature-3');});
@@ -15,4 +16,16 @@ test('homepage scroll stays inside available content including nonzero source or
 test('invalid assets, bounds, duplicate IDs, and telemetry are rejected',()=>{for(const mutate of [p=>p.homepage.src='javascript:alert(1)',p=>p.homepage.region={x:0,y:0,width:9999,height:100},p=>p.features[1].id=p.features[0].id,p=>p.features[0].signals.viewport=2,p=>p.signalMode='live-connected']){const p=fresh();mutate(p);assert.throws(()=>validateSource(p));}});
 test('planning leaves caller input untouched and preserves title/media association',()=>{const p=fresh(),before=JSON.stringify(p),r=planSequence(p);assert.equal(JSON.stringify(p),before);for(const f of r.selected){const original=p.features.find(x=>x.id===f.id);assert.equal(f.title,original.title);assert.equal(f.media.src,original.media.src);}assert.equal(r.source.signalMode,'simulated');});
 
-test('showcase extends the existing payload rather than creating another app contract',async()=>{const {payloadFromShowcase,SHOWCASE_SHOTS}=await import('../src/showcase.js');const {validatePayload}=await import('../src/contracts.js');const p=payloadFromShowcase(fresh());assert.deepEqual(validatePayload(p),[]);assert.equal(p.version,1);assert.equal(p.showcase.version,2);assert.deepEqual(SHOWCASE_SHOTS.map(s=>s.id),['hook','reveal','collage','focus','focus2','focus3','ending']);});
+test('full pages and short captures scroll only inside observed pixels at a constant width',()=>{
+ for(const m of [{width:1440,height:4200},{width:1280,height:720,region:{x:0,y:53,width:1280,height:667},windowHeight:536},{width:390,height:844}]){
+  const a=pageRegion(m,0),b=pageRegion(m,1),limit=m.region??{x:0,y:0,width:m.width,height:m.height};
+  assert.equal(a.width,b.width);assert.equal(a.height,b.height);assert.equal(a.y,limit.y);assert.equal(b.y+b.height,limit.y+limit.height);
+ }
+});
+test('app imagery and full feature pages validate independently from component crops',()=>{
+ const p=fresh();p.features[0].page={...p.features[0].media};assert.ok(validateSource(p));
+ p.features[0].page.src='javascript:alert(1)';assert.throws(()=>validateSource(p));
+ const q=fresh();q.images[0].region={x:0,y:0,width:20000,height:20000};assert.throws(()=>validateSource(q));
+});
+
+test('showcase extends the existing payload rather than creating another app contract',async()=>{const {payloadFromShowcase,SHOWCASE_SHOTS}=await import('../src/showcase.js');const {validatePayload}=await import('../src/contracts.js');const p=payloadFromShowcase(fresh());assert.deepEqual(validatePayload(p),[]);assert.equal(p.version,1);assert.equal(p.showcase.version,2);assert.deepEqual(SHOWCASE_SHOTS.map(s=>s.id),['hook','reveal','collage','focus','focus2','focus3','capabilities','ending']);});

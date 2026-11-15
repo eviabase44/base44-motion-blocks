@@ -1,12 +1,13 @@
 // The v2 experiment accepts host-supplied observations. It never invents live telemetry.
 export const FPS = 12;
 export const BEATS = Object.freeze([
-  {id:'hook',name:'Opening',frames:72},
+  {id:'hook',name:'Opening',frames:36},
   {id:'reveal',name:'Homepage scroll',frames:36},
   {id:'collage',name:'Feature bundle',frames:24},
   {id:'focus',name:'Feature 1',frames:24},
   {id:'focus2',name:'Feature 2',frames:24},
   {id:'focus3',name:'Feature 3',frames:24},
+  {id:'capabilities',name:'Capabilities',frames:36},
   {id:'ending',name:'Proudly built',frames:24}
 ].map((b,i,a)=>Object.freeze({...b,start:a.slice(0,i).reduce((n,x)=>n+x.frames,0)})));
 export const TOTAL_FRAMES = BEATS.reduce((n,b)=>n+b.frames,0);
@@ -31,6 +32,8 @@ export function validateSource(input){
     if(m.hover){region(m.hover,m,name+' hover');const r=sourceRegion(m);if(m.hover.x<r.x||m.hover.y<r.y||m.hover.x+m.hover.width>r.x+r.width||m.hover.y+m.hover.height>r.y+r.height)throw Error(`${name} hover must fit inside the selected region.`);}
   }
   media(p.homepage,'Homepage');
+  if(p.benefit!==undefined)requireText(p.benefit,'Benefit',100);
+  if(p.images!==undefined){if(!Array.isArray(p.images)||p.images.length>20)throw Error('Provide up to 20 app images.');p.images.forEach((m,i)=>media(m,`App image ${i+1}`));}
   if(p.homepage.windowHeight!==undefined&&!finite(p.homepage.windowHeight,80,(p.homepage.region?.height??p.homepage.height)))throw Error('Homepage windowHeight exceeds the available capture.');
   if(!Array.isArray(p.features)||p.features.length<3||p.features.length>40)throw Error('Provide 3–40 feature candidates.');
   const ids=new Set();
@@ -38,6 +41,7 @@ export function validateSource(input){
     requireText(f.id,'Feature ID',60);if(ids.has(f.id))throw Error('Feature IDs must be unique.');ids.add(f.id);
     requireText(f.name,'Feature name',50);requireText(f.title,'Feature title',90);requireText(f.family,'Feature family',60);
     media(f.media,f.name);
+    if(f.page)media(f.page,f.name+' page');
     for(const [key,max] of [['credits',1e9],['visualRichness',100],['viewport',1]])if(f.signals?.[key]!==null&&!finite(f.signals?.[key],0,max))throw Error(`${f.name}: invalid ${key} signal. Use null for missing observations.`);
     if(f.available!==undefined&&typeof f.available!=='boolean')throw Error('available must be a boolean.');
   }

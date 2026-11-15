@@ -1,6 +1,6 @@
 # Base44 Motion Blocks
 
-**Show off v2:** the existing editor and motion system now support a 19-second sequence: six-second reference opening, homepage scroll, original feature burst, three ranked feature highlights and fixed ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Integration details](docs/v2-experiment.md). Feature signals are simulated for this test.
+**Show off v2:** the existing editor now renders the revised Figma flow in 19 seconds: centered description and app entry, homepage scroll, feature bundle, three ranked feature pages, capability grid, and symbol-to-logo ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Layout and motion mapping](docs/figma-flow.md) · [Integration details](docs/v2-experiment.md). Feature signals remain simulated in the local test.
 
 A code-based editor for personalized, 15-second app showcase videos. Five independent shots share one app payload: copy, colors, font, and screen images. Choose from **17 layouts** and keep the fixed **“Proudly built on” + Base44 logo** ending.
 
@@ -84,9 +84,9 @@ Give the container a 16:9 aspect ratio. See [the integration guide](docs/integra
 
 ## Current scope
 
-- App screens use the preset image windows and cover cropping. Layouts have fixed landscape geometry.
+- Original v1 presets use fixed image windows. The new v2 Figma layouts contain supplied app pages and components at their source aspect ratios.
 - This version animates screenshots and template elements. It does not reconstruct or record in-app interactions.
-- MP4 export and soundtrack playback are not implemented in this version. The current output is an editable web animation and JSON template.
+- V2 supports optional soundtrack playback on its shared sequence clock. In-app MP4 export is not implemented; the output is an editable web animation and JSON template.
 - Saved preview connections are snapshots, not a live sync connection. Refresh them after changing an app.
 - The local API is a development adapter. A production host must provide authentication, tenant authorization, quotas, durable asset storage, and an isolated capture worker.
 

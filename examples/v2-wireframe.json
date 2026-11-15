@@ -83,5 +83,23 @@
       }
     }
   ],
-  "notes": "Public wireframe example. Replace media and simulated signals with your own app source."
+  "notes": "Public wireframe example. Replace media and simulated signals with your own app source.",
+  "benefit": "Now you can bring your ideas together",
+  "images": [
+    {
+      "src": "/assets/v2/wireframe-1.svg",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "src": "/assets/v2/wireframe-2.svg",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "src": "/assets/v2/wireframe-3.svg",
+      "width": 1280,
+      "height": 900
+    }
+  ]
 }

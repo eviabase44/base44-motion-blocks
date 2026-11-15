@@ -1,32 +1,31 @@
 # Show off your app v2
 
-V2 updates the existing app on `show-off-v2`. It uses the original **index.html editor, src/player.js clock, app payload, 17-layout gallery and shot renderers**. Open `http://127.0.0.1:8782/index.html?version=2`. There is no separate editor or replacement player.
+V2 updates the existing app on `show-off-v2`. It uses the original **index.html editor, src/player.js clock, app payload, layout gallery and original shot renderers, with a new Figma flow renderer**. Open `http://127.0.0.1:8782/index.html?version=2`. There is no separate editor or replacement player.
 
 The payload remains version 1 with an optional `showcase` extension. Existing payloads without this extension retain the original five-shot, 15-second behavior. The user explicitly requested changes to v1, not a redesigned tool.
 
 ## Updated sequence
 
-The user approved extending the sequence to about 19 seconds after supplying a six-second opener. V2 is **19 seconds, 228 frames at the existing 12 fps**.
+The 2026-11-15 Figma revision is the current default. It keeps the approved total of **19 seconds, 228 frames at 12 fps**. The opening and homepage form a six-second entry; the added capability section uses three seconds before the ending.
 
-| Time | Existing shot | Change |
+| Time | Shot | Current behavior |
 | --- | --- | --- |
-| 0–6s | Opening | New reference-based gallery → cursor click → app-description reveal, using the connected app. Other existing opening layouts remain selectable. |
-| 6–9s | App reveal | Homepage scroll inside the selected existing reveal layout. |
-| 9–11s | Card burst | Original measured card paths, populated from selected features. Existing burst alternatives remain selectable. |
-| 11–13s | Feature focus | First selected feature and its own title. |
-| 13–15s | Feature focus 2 | Second selected feature and its own title; independently selectable existing focus layout. |
-| 15–17s | Feature focus 3 | Third selected feature and its own title; independently selectable existing focus layout. |
-| 17–19s | Ending | Existing “Proudly built on” and official Base44 logo. |
+| 0–3s | Opening | Centered app description, cursor click, expanding app window. |
+| 3–6s | Homepage scroll | Same window; bounded page movement and predicted hover emphasis. |
+| 6–8s | Feature bundle | Selected components and separate app imagery on retargeted measured card paths. |
+| 8–10s | Feature 1 | First selected page, title and numbered corner. |
+| 10–12s | Feature 2 | Second selected page, title and numbered corner. |
+| 12–14s | Feature 3 | Third selected page, title and numbered corner. |
+| 14–17s | Capabilities | Benefit copy with the Figma right- and left-hand grid arrangements. |
+| 17–19s | Ending | Original Figma vector symbols resolve to “Proudly built on” and the Base44 lockup. |
 
-The supplied `show-off-your-app-v21 (1).mp4`, **0:00–0:06**, provides the opening composition/timing reference. It was inspected at 1920×1050, 25 fps and sampled frames. The weather-app content is replaced with the connected app; source footage is not bundled or patched. The code adaptation is for review, not a claim of pixel-perfect matching or brand approval.
-
-The visual progression establishes the app before feature details. The original card burst is the one signature move; feature shots keep the established typography, palette and layout vocabulary. The fixed ending releases into a held frame.
+See [the Figma node and motion-source mapping](figma-flow.md). The supplied earlier video was used for the previous opening experiment; this revision follows the newer user-designed frames. Existing alternative layouts remain selectable in the same editor. V1 payloads retain their previous five-shot timing and design.
 
 ## Feature observations
 
 `src/showcase.js` adapts observations into the existing payload and dispatches the existing renderers. `src/v2/model.js` validates and ranks observations. `src/v2/types.d.ts` describes the input; `examples/v2-wireframe.json` is a public fixture.
 
-A feature has an `id`, `family`, `name`, short video `title`, observed `media`, optional `available` flag and three signals:
+A feature has an `id`, `family`, `name`, short video `title`, observed component `media`, optional full-screen `page`, optional `available` flag and three signals:
 
 1. `credits`: nonnegative credit usage per feature, or `null`.
 2. `visualRichness`: 0–100 proxy for colors/images in the feature, or `null`.
@@ -42,7 +41,9 @@ The existing inspector includes **Feature selection · SIMULATED DATA**. Change 
 
 ## Image geometry and scrolling
 
-Images include decoded `width` and `height`. Optional `region` bounds identify an observed component in source pixels. The media renderer contains these regions without distortion. The original reveal/focus containers accommodate wider app content where needed, and other layouts retain their source motion and composition.
+Images include decoded `width` and `height`. Optional `region` bounds identify an observed component in source pixels. The media renderer contains these regions without distortion. The default v2 page slots contain full screens. Component slots can use an explicitly observed hover region. Extremely wide list rows use their supplied page in square montage slots to avoid unreadable strips. Other existing layouts retain their earlier compositions.
+
+Optional `images` holds up to 20 actual app artwork/photo observations, separate from feature UI. The bundle and capability grid use the first three. Missing images are omitted rather than replaced with invented photography. Optional `benefit` supplies the capability headline.
 
 Homepage `windowHeight` defines the scrolling viewport in source pixels. Movement stays within supplied capture bounds. A short viewport capture supports a short pan; a genuine full-page capture supports a longer scroll. The renderer does not invent offscreen content.
 
@@ -58,9 +59,6 @@ Optional music uses the existing player clock for full-sequence playback. The lo
 
 ## Verification
 
-- 46 Node checks pass, including original contracts plus selection hierarchy, deduplication, missing data, geometry, new timing and v1-payload compatibility.
-- `/tests/v2-browser.html` exercises the existing player: all seven shots in every applicable existing layout, 840 rendered frames, exact cuts, independent feature variants, latest update ordering, missing-media rejection, fixed ending and return to the original 15-second payload.
-- `/tests/browser.html` passes the original 1,836-frame regression with no reported errors or overflow.
-- In the existing editor, raising Asset library credits moved it to Feature 1 with its matching title and visual. Restoring the signals restored the weekly schedule.
+Run `npm test`, then open `/tests/v2-browser.html` and `/tests/browser.html` with the local server running. The v2 harness checks every applicable layout across all eight shots, exact cuts, independent feature layouts, update ordering, image failures and the original payload contract. The original harness checks all 1,836 v1 frames and content swapping.
 
-Technical checks do not establish creative approval. The available capture bounds and simulated signals are explicit limits of this test.
+Technical checks do not establish creative approval. The available capture bounds and simulated signals remain explicit limits of the local test.
