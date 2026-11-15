@@ -68,7 +68,7 @@ function reveal(frame,p,o){
   const key=`reveal-${o.variant}`,f=sourceLocalFrame('reveal',o.variant,frame),out=paper(p,f),[x,y,w,h]=sample(key,'window',f);
   out.push(mediaSlot(p.media.hero,x,y,w,h,p,0,o.wireframe));
   if(o.variant==='screen-stage'){
-    if(f>=11)out.push(rect(x,y,w,h,p.theme.accent,{opacity:[.08,.14,.22,.29,.35,.4][Math.min(5,f-11)]}));
+    if(f>=11&&!p.showcase)out.push(rect(x,y,w,h,p.theme.accent,{opacity:[.08,.14,.22,.29,.35,.4][Math.min(5,f-11)]}));
     const spread=f>=15?14:0;
     [[153.5-spread,52.5-spread],[806.5+spread,52.5-spread],[153.5-spread,507.5+spread],[806.5+spread,507.5+spread]].forEach(([cx,cy])=>out.push(el('circle',{cx,cy,r:5,fill:p.theme.primary})));
     return out;

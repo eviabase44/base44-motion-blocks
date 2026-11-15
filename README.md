@@ -1,5 +1,7 @@
 # Base44 Motion Blocks
 
+**Show off v2:** the existing editor and motion system now support a 19-second sequence: six-second reference opening, homepage scroll, original feature burst, three ranked feature highlights and fixed ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Integration details](docs/v2-experiment.md). Feature signals are simulated for this test.
+
 A code-based editor for personalized, 15-second app showcase videos. Five independent shots share one app payload: copy, colors, font, and screen images. Choose from **17 layouts** and keep the fixed **“Proudly built on” + Base44 logo** ending.
 
 This repository contains the screenshot-based version and original preset compositions. It does not contain the reverted simulated app components or adaptive layout experiment.

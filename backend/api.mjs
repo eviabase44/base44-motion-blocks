@@ -45,6 +45,11 @@ export async function handleAPI(req,res,pathname){
     if(pathname.startsWith('/api/captures/')&&req.method==='GET'){
       const data=await readCapture(pathname);res.writeHead(200,{'Content-Type':pathname.endsWith('.jpg')?'image/jpeg':'image/png','Content-Length':data.length,'Cache-Control':'private, max-age=3600','X-Content-Type-Options':'nosniff'});res.end(data);return true;
     }
+    if(pathname==='/api/v2/local-source'&&req.method==='GET'){
+      try{send(res,200,JSON.parse(readFileSync(new URL('../.cache/v2/source.json',import.meta.url),'utf8')));}
+      catch{send(res,404,{error:'No local v2 source configured.'});}
+      return true;
+    }
     if(pathname==='/api/capabilities'&&req.method==='GET'){send(res,200,await providerStatus());return true;}
     if(pathname==='/api/preview-connections'&&req.method==='GET'){
       const url=new URL(req.url,'http://localhost').searchParams.get('url'),record=await readPreviewConnection(url);

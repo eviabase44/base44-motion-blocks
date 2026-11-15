@@ -1,0 +1,87 @@
+{
+  "version": 2,
+  "signalMode": "simulated",
+  "app": {
+    "name": "YOUR APP",
+    "kind": "app"
+  },
+  "description": "I built an app that brings everything together.",
+  "theme": {
+    "primary": "#253fe6",
+    "accent": "#fb784c",
+    "surface": "#f2f1ed",
+    "ink": "#172027",
+    "onPrimary": "#ffffff",
+    "blocks": [
+      "#696969",
+      "#a2a0ee",
+      "#9f9f9f"
+    ]
+  },
+  "typography": {
+    "family": "Dazzed",
+    "src": "https://media.base44.com/files/public/marketing-site-assets/fonts/dazzed/dazzed-semibold.woff2",
+    "headlineWeight": 600,
+    "bodyWeight": 600,
+    "wordmarkWeight": 600,
+    "letterSpacingEm": -0.03
+  },
+  "homepage": {
+    "src": "/assets/v2/wireframe-1.svg",
+    "width": 1280,
+    "height": 900,
+    "windowHeight": 536,
+    "title": "Your app, in motion."
+  },
+  "features": [
+    {
+      "id": "feature-1",
+      "family": "feature-1",
+      "name": "Feature 1",
+      "title": "Your first feature.",
+      "media": {
+        "src": "/assets/v2/wireframe-1.svg",
+        "width": 1280,
+        "height": 900
+      },
+      "signals": {
+        "credits": 120,
+        "visualRichness": 70,
+        "viewport": 0.7
+      }
+    },
+    {
+      "id": "feature-2",
+      "family": "feature-2",
+      "name": "Feature 2",
+      "title": "Your second feature.",
+      "media": {
+        "src": "/assets/v2/wireframe-2.svg",
+        "width": 1280,
+        "height": 900
+      },
+      "signals": {
+        "credits": 110,
+        "visualRichness": 75,
+        "viewport": 0.7
+      }
+    },
+    {
+      "id": "feature-3",
+      "family": "feature-3",
+      "name": "Feature 3",
+      "title": "Your third feature.",
+      "media": {
+        "src": "/assets/v2/wireframe-3.svg",
+        "width": 1280,
+        "height": 900
+      },
+      "signals": {
+        "credits": 100,
+        "visualRichness": 80,
+        "viewport": 0.7
+      }
+    }
+  ],
+  "notes": "Public wireframe example. Replace media and simulated signals with your own app source."
+}

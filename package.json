@@ -9,7 +9,9 @@
     ".": "./src/player.js",
     "./contracts": "./src/contracts.js",
     "./capture": "./src/capture.js",
-    "./server": "./backend/api.mjs"
+    "./server": "./backend/api.mjs",
+    "./v2/model": "./src/v2/model.js",
+    "./showcase": "./src/showcase.js"
   },
   "scripts": {
     "start": "node server.mjs",

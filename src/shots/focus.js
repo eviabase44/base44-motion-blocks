@@ -9,9 +9,10 @@ export function renderFocus(frame,p,o) {
   const coords=[[270,24],[270,354],[270+width(words[1]+' ',size,p),354],[270,440]];
   const onsets=[9,10,11,13],accents=[2,2,3,2];
   words.forEach((word,i)=>{if(frame>=onsets[i])out.push(text(word,coords[i][0]+(frame-onsets[i]<2?23.65:0),coords[i][1],size,p,{fill:frame-onsets[i]<accents[i]?p.theme.accent:p.theme.onPrimary}));});
-  if(frame>=9)out.push(text('/ 03',244+(frame<12?22:frame<13?8:0),207,36,p,{fill:p.theme.onPrimary}));
+  if(frame>=9)out.push(text(`/ 0${o.featureNumber??3}`, (p.showcase?54:244)+(frame<12?22:frame<13?8:0),207,36,p,{fill:p.theme.onPrimary}));
   // A 10% smaller, fixed window gives the headline space while three app images scroll inside it.
-  const window={x:345.18,y:145.13,width:269.64,height:200.34};
+  const m=getFeatureMedia(p)[0],r=m.region??m,wide=p.showcase&&r.width>r.height,screenWidth=wide?Math.min(770,200.34*r.width/r.height):269.64;
+  const window={x:wide?(960-screenWidth)/2:345.18,y:145.13,width:screenWidth,height:200.34};
   if(frame>=11){
     const images=getFeatureMedia(p),scroll=featureScroll(frame,images.length);
     const slides=images.map((image,i)=>group([mediaSlot(image,0,i*window.height,window.width,window.height,p,i+1,o.wireframe)],{'data-feature-index':i}));

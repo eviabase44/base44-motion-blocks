@@ -25,7 +25,7 @@ The app itself should be the subject: its UI, recognizable features, and useful 
 - The end card is fixed: **“Proudly built on” with the official Base44 logo**. Earlier “Go build your own” versions and duplicate credit lines were superseded. Do not offer alternate ending layouts.
 - All card layouts belong in the gallery beneath the editor, with independent selection per shot.
 
-## Current implementation
+## Baseline implementation (before the v2 changes)
 
 The player renders deterministic SVG at **960 × 540, 12 fps, 180 frames / 15 seconds**.
 
@@ -108,3 +108,7 @@ npm start
 Open `http://127.0.0.1:8782/`. The local server must be running. Keep work on `show-off-v2` until changes are ready for review against `main`.
 
 Local `.cache/` data, saved preview connections, private screenshots, reference films, credentials, and music remain excluded from Git. The existing local checkout retains its ignored runtime data when switching branches; a new clone does not receive it. Preserve those local originals when testing. Public branch context intentionally contains no private app payloads, captures, session URLs, or licensed source media.
+
+## 2026-11-15 version update
+
+The user authorized implementing the revised flow as if feature data were connected, using simulated signals. A supplied 0:00–0:06 reference adds a gallery/click/description opening; the user approved extending the cut to about 19 seconds. The user explicitly clarified that this work must update the existing v1 app, not create a separate tool. The implementation extends the existing editor, payload, player and layout gallery on this branch. It uses 228 frames at the original 12 fps, with three independent feature-focus shots and the fixed ending. See [v2 implementation](v2-experiment.md). The original baseline and audits above remain historical context.

@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Show off v2 integration checks</title></head><body><h1>Show off v2 integration checks</h1><button id="run">Run v2 checks</button><pre id="result">Ready</pre><div id="fixture" style="width:960px;height:540px"></div><script type="module">
+import {payloadFromShowcase,SHOWCASE_SHOTS} from '../src/showcase.js';
+import {renderShot,createMotionPlayer,loadAppFont,FPS,SHOTS} from '../src/player.js';
+import {SHOT_VARIANTS} from '../src/variants.js';
+const result=document.querySelector('#result'),fixture=document.querySelector('#fixture');
+document.querySelector('#run').onclick=async()=>{try{
+ result.textContent='Running…';const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),errors=[];await loadAppFont(p);let frames=0;
+ for(const shot of SHOWCASE_SHOTS)for(const variant of SHOT_VARIANTS[shot.id==='focus2'||shot.id==='focus3'?'focus':shot.id])for(let frame=0;frame<shot.frames;frame++){const svg=renderShot(shot.id,frame,p,{wireframe:false,variant:variant.id});frames++;if(/NaN|Infinity/.test(svg.outerHTML))errors.push('Invalid geometry '+shot.id+'/'+frame);}
+ const player=await createMotionPlayer(fixture,{payload:p,sequence:SHOWCASE_SHOTS.map(s=>s.id),wireframe:false});let start=0;
+ for(const shot of SHOWCASE_SHOTS){player.seekFrame(start);if(player.getState().shot!==shot.id)errors.push('Wrong cut '+shot.id);start+=shot.frames;}
+ if(player.getState().duration!==19)errors.push('Wrong duration');player.seekFrame(227);if(!fixture.textContent.includes('Proudly built on')||fixture.querySelectorAll('image').length!==1)errors.push('Ending changed');
+ player.setShot('focus2');player.setVariant('focus2','six-week');player.seekFrame(23);if(!fixture.textContent.includes('Find')&&!fixture.textContent.includes('Your'))errors.push('Wrong feature title');if(player.getVariants().focus==='six-week')errors.push('Second feature layout changed first feature');
+ const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
+ const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
+ const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,duration:19,checks:['Original player and renderer integration','All existing layouts across seven shots','7 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+}catch(e){result.textContent='FAIL '+e.stack;}};
+</script></body></html>
