@@ -27,8 +27,9 @@
 <section id="motion-panel" class="motion-panel" hidden aria-labelledby="motion-heading">
 <div class="section-heading"><h3 id="motion-heading">Animation · <span id="motion-shot"></span></h3><span id="motion-lock">ORIGINAL MOTION</span></div>
 <p id="motion-cut" class="motion-note"></p>
-<label for="motion-style">Motion version</label><select id="motion-style"><option value="refined">Refined motion</option><option value="original">Earlier motion</option></select>
-<div id="refined-options"><label for="motion-cadence">Playback cadence</label><select id="motion-cadence"><option value="60">Smooth · 60 fps</option><option value="24">24 fps</option><option value="12">Stepped · 12 fps</option></select><button id="motion-refine">Apply refined preset to all shots</button><p class="motion-note">Resets motion timing and cuts. Keeps your element positions and sizes.</p></div>
+<label for="motion-style">Motion version</label><select id="motion-style"><option value="original">Base44 study · 12 fps</option><option value="refined">Smooth experiment · archived</option></select>
+<button id="motion-study">Restore Base44 study motion</button><p class="motion-note">Restores the study timing and hard cuts for all shots. Keeps your element positions and sizes.</p>
+<div id="refined-options"><label for="motion-cadence">Playback cadence</label><select id="motion-cadence"><option value="60">Smooth · 60 fps</option><option value="24">24 fps</option><option value="12">Stepped · 12 fps</option></select><button id="motion-refine">Apply archived smooth preset</button></div>
 <div id="motion-fields"></div>
 <div id="cut-controls"><label for="cut-type">Cut into the next shot</label><select id="cut-type"></select><div class="motion-field" id="cut-duration-field"><div><label for="cut-frames">Cut duration</label><output id="cut-duration-value" for="cut-frames"></output></div><input id="cut-frames" type="range" min="2" max="12" step="1"></div><button id="preview-cut">Preview cut ↗</button></div>
 <p id="motion-layout-note" class="motion-note" hidden>Motion and element controls use the Figma layouts. Cut types work with any layout.</p>

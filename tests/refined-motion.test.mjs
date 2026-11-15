@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {arrive,smoother,curvePoint,refinedPreset} from '../src/v2/refined-motion.js';
-import {validateMotion,makeMotionPreset,readMotionPreset,playbackCadence} from '../src/v2/motion-settings.js';
+import {validateMotion,makeMotionPreset,readMotionPreset,playbackCadence,studyPreset,settingsFor} from '../src/v2/motion-settings.js';
 import {restoreSavedMotion} from '../src/v2/motion-panel.js';
-test('editor initializes refined motion while preserving saved and explicit settings',()=>{
+test('editor defaults to Base44 study while preserving saved and explicit settings',()=>{
  const fresh=()=>({app:{name:'Test'},showcase:{}}),storage={getItem:()=>null};
- assert.deepEqual(restoreSavedMotion(fresh(),storage).showcase.motion,refinedPreset());
+ assert.deepEqual(restoreSavedMotion(fresh(),storage).showcase.motion,studyPreset());
  const saved={version:1,style:'original',shots:{hook:{tempo:.8}},elements:{}};
  const preset=makeMotionPreset({app:{name:'Test'},motion:saved});
  const stored={getItem:()=>JSON.stringify(preset)};
@@ -13,6 +13,15 @@ test('editor initializes refined motion while preserving saved and explicit sett
  const explicit=fresh();explicit.showcase.motion=refinedPreset();
  assert.deepEqual(restoreSavedMotion(explicit,stored).showcase.motion,refinedPreset());
  assert.deepEqual(restoreSavedMotion({app:{name:'V1'}},stored),{app:{name:'V1'}});
+});
+test('study restoration removes smooth timing and preserves independent element edits',()=>{
+ const old=refinedPreset({focus:{headline:{dx:2.1,sy:.8}}}),restored=studyPreset(old.elements);
+ assert.equal(playbackCadence({motion:restored}),12);
+ assert.equal(restored.style,'original');assert.deepEqual(restored.elements,old.elements);
+ old.elements.focus.headline.dx=99;assert.equal(restored.elements.focus.headline.dx,2.1);
+ assert.equal(settingsFor({motion:restored},'hook').wordFrames,2);
+ assert.equal(settingsFor({motion:restored},'hook').cutType,'cut');
+ assert.deepEqual(readMotionPreset(makeMotionPreset({app:{name:'Test'},motion:restored})),restored);
 });
 test('refined preset preserves layout edits, validates and survives preset export',()=>{
  const elements={focus:{headline:{dx:2.1,sy:.8}}},motion=refinedPreset(elements);elements.focus.headline.dx=99;

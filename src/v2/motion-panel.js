@@ -1,11 +1,11 @@
 import {refinedPreset} from './refined-motion.js';
-import {controlsFor,MOTION_FIELDS,settingsFor,validateMotion,makeMotionPreset,readMotionPreset,saveMotion,loadMotion,CUT_TYPES,motionStyle,playbackCadence} from './motion-settings.js';
+import {controlsFor,MOTION_FIELDS,settingsFor,validateMotion,makeMotionPreset,readMotionPreset,saveMotion,loadMotion,CUT_TYPES,motionStyle,playbackCadence,studyPreset} from './motion-settings.js';
 const $=id=>document.getElementById(id);
 const normalized=source=>JSON.stringify(validateMotion(source.motion));
 export function restoreSavedMotion(payload,storage){
   if(!payload.showcase||payload.showcase.motion!==undefined)return payload;
   const saved=loadMotion(storage,{...payload.showcase,app:payload.app});
-  payload.showcase.motion=saved??refinedPreset();
+  payload.showcase.motion=saved??studyPreset();
   return payload;
 }
 export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,preview,previewCut,useFigma,storage}){
@@ -24,8 +24,8 @@ export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,pr
     const shot=getShot(),id=shot.id,original=getVariant(id)==='original',style=motionStyle(source()),settings=settingsFor(source(),id);
     $('motion-style').value=style;$('motion-cadence').value=String(playbackCadence(source()));$('refined-options').hidden=style!=='refined';
     const note=document.querySelector('.local-note');if(note)note.textContent=`960 × 540 · ${playbackCadence(source())} fps playback · 19 seconds. Each card stays editable.`;
-    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=original?(style==='refined'?'REFINED MOTION':'EARLIER MOTION'):'LEGACY LAYOUT';
-    $('motion-cut').textContent=id==='ending'?'Adjust the symbol hold. Move or resize any layer below.':style==='refined'?'Staggered entrances, eased landings and readable holds. Adjust this shot below.':'The earlier animation is preserved. Choose how this shot cuts into the next one.';
+    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=original?(style==='refined'?'SMOOTH EXPERIMENT':'BASE44 STUDY'):'LEGACY LAYOUT';
+    $('motion-cut').textContent=id==='ending'?'Adjust the symbol hold. Move or resize any layer below.':style==='refined'?'Previous smooth experiment. Use Base44 study for the reference motion.':'Stepped word reveals, measured card paths, sharp landings and held poses. Your Figma layouts stay editable.';
     $('motion-fields').hidden=!original;$('motion-layout-note').hidden=original;$('motion-use-figma').hidden=original;
     $('cut-controls').hidden=id==='ending';$('cut-type').value=settings.cutType;$('cut-frames').value=settings.cutFrames;$('cut-duration-value').value=(settings.cutFrames/12).toFixed(2)+'s';$('cut-duration-field').hidden=settings.cutType==='cut';
     $('motion-reset').disabled=!original;
@@ -41,6 +41,7 @@ export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,pr
   $('motion-style').onchange=()=>{const m=validateMotion(source().motion);m.style=$('motion-style').value;commit(m);refresh();preview();};
   $('motion-cadence').onchange=()=>{const m=validateMotion(source().motion);m.cadence=Number($('motion-cadence').value);commit(m);refresh();preview();};
   $('motion-refine').onclick=()=>{commit(refinedPreset(validateMotion(source().motion).elements));refresh();preview();};
+  $('motion-study').onclick=()=>{commit(studyPreset(validateMotion(source().motion).elements));refresh();preview();};
   for(const [value,label]of Object.entries(CUT_TYPES)){const option=document.createElement('option');option.value=value;option.textContent=label;$('cut-type').append(option);}
   function setCut(key,value){const m=validateMotion(source().motion),id=getShot().id;m.shots[id]={...m.shots[id],[key]:value};commit(m);}
   $('cut-type').onchange=()=>{setCut('cutType',$('cut-type').value);$('cut-duration-field').hidden=$('cut-type').value==='cut';previewCut();};

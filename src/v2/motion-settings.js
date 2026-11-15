@@ -18,6 +18,9 @@ const originalControls=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['t
 export const controlsFor=(id,style='original')=>style==='refined'?[...new Set([...originalControls(id),...(['hook','focus','focus2','focus3'].includes(id)?['movement']:[]),'softness'])]:originalControls(id);
 export const motionStyle=source=>source?.motion?.style??'original';
 export const playbackCadence=source=>motionStyle(source)==='refined'?(source.motion.cadence??60):12;
+// Restore the source-based Figma adaptation. Reset timing without changing the
+// user's independently edited layer positions, sizes or visibility.
+export function studyPreset(elements={}){return {version:1,style:'original',cadence:12,shots:{},elements:validateElements(structuredClone(elements))};}
 export function validateMotion(input){
   if(input===undefined)return {version:1,shots:{},elements:{}};
   if(!input||typeof input!=='object'||Array.isArray(input)||input.version!==1||!input.shots||typeof input.shots!=='object'||Array.isArray(input.shots))throw Error('Invalid animation settings. Expected version 1 and a shots object.');

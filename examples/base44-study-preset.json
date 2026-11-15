@@ -1,0 +1,12 @@
+{
+  "format": "base44-shot-motion",
+  "version": 1,
+  "app": "Any app",
+  "motion": {
+    "version": 1,
+    "style": "original",
+    "cadence": 12,
+    "shots": {},
+    "elements": {}
+  }
+}

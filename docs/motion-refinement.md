@@ -1,5 +1,7 @@
 # Refined motion pass — 2026-11-15
 
+**Archived experiment, rejected by the user:** the smoothing, masked word rises and new card arcs departed from the Base44 motion study. See [the restoration](study-motion.md) for the current default. The notes below record the experiment; they are not brand guidance or approval.
+
 This is a motion revision of the existing eight-shot Figma flow, tested with PUSHBOX. The eight beats, 19-second duration, app palette, Dazzed, source proportions and final Base44 lockup remain the same. The previous animation is still available as **Earlier motion**. This is an editable native-code adaptation, not source-frame replacement and not a screen recording.
 
 ## Direction
