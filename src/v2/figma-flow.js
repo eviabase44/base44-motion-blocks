@@ -114,3 +114,6 @@ export function renderFigmaFlow(id,rawFrame,plan,options){
   if(!fn)throw Error(`No Figma layout for ${id}`);
   return [group(fn(plan,frame,options),{'data-design-node':FIGMA_NODES[id].join(','),'data-design-revision':'2026-11-15'})];
 }
+
+// Shared layout geometry; the earlier animation above remains unchanged.
+export {HOME,FEATURE,FOCUS_IDS,logo,symbols,surface,background,markers,media,wrap,component,imagery,BUNDLE};

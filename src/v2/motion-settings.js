@@ -1,8 +1,9 @@
 // Serializable per-shot motion, cut and element adjustments.
 import {validateElements} from './element-settings.js';
 export const MOTION_SHOTS=['hook','reveal','collage','focus','focus2','focus3','capabilities','ending'];
-export const MOTION_DEFAULTS=Object.freeze({tempo:1,movement:1,joinFrames:7,wordFrames:2,scroll:1,hover:4,symbolFrames:5,cutType:'cut',cutFrames:6});
+export const MOTION_DEFAULTS=Object.freeze({tempo:1,movement:1,joinFrames:7,wordFrames:2,scroll:1,hover:4,symbolFrames:5,cutType:'cut',cutFrames:6,softness:.5});
 export const MOTION_FIELDS={
+  softness:{label:'Landing softness',min:0,max:1,step:.05,format:v=>Math.round(v*100)+'%'},
   tempo:{label:'Animation speed',min:.5,max:2,step:.05,format:v=>v.toFixed(2)+'×'},
   movement:{label:'Movement amount',min:0,max:1.5,step:.05,format:v=>Math.round(v*100)+'%'},
   joinFrames:{label:'App opening time',min:4,max:12,step:1,format:v=>(v/12).toFixed(2)+'s'},
@@ -13,10 +14,15 @@ export const MOTION_FIELDS={
   symbolFrames:{label:'Symbol row hold',min:2,max:16,step:1,format:v=>(v/12).toFixed(2)+'s'}
 };
 export const CUT_TYPES={cut:'Hard cut',dissolve:'Dissolve','slide-left':'Slide left','slide-right':'Slide right',wipe:'Wipe across'};
-export const controlsFor=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['tempo','scroll','hover'],collage:['tempo','movement'],focus:['tempo','wordFrames','hover'],focus2:['tempo','wordFrames','hover'],focus3:['tempo','wordFrames','hover'],capabilities:['tempo','movement'],ending:['symbolFrames']})[id]??[];
+const originalControls=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['tempo','scroll','hover'],collage:['tempo','movement'],focus:['tempo','wordFrames','hover'],focus2:['tempo','wordFrames','hover'],focus3:['tempo','wordFrames','hover'],capabilities:['tempo','movement'],ending:['symbolFrames']})[id]??[];
+export const controlsFor=(id,style='original')=>style==='refined'?[...new Set([...originalControls(id),...(['hook','focus','focus2','focus3'].includes(id)?['movement']:[]),'softness'])]:originalControls(id);
+export const motionStyle=source=>source?.motion?.style??'original';
+export const playbackCadence=source=>motionStyle(source)==='refined'?(source.motion.cadence??60):12;
 export function validateMotion(input){
   if(input===undefined)return {version:1,shots:{},elements:{}};
   if(!input||typeof input!=='object'||Array.isArray(input)||input.version!==1||!input.shots||typeof input.shots!=='object'||Array.isArray(input.shots))throw Error('Invalid animation settings. Expected version 1 and a shots object.');
+  if(input.style!==undefined&&!['original','refined'].includes(input.style))throw Error('Invalid motion style.');
+  if(input.cadence!==undefined&&![12,24,60].includes(input.cadence))throw Error('Invalid playback cadence.');
   const shots={};
   for(const [id,settings]of Object.entries(input.shots)){
     if(!MOTION_SHOTS.includes(id)||!settings||typeof settings!=='object'||Array.isArray(settings))throw Error('Unknown animation shot: '+id);
@@ -24,11 +30,11 @@ export function validateMotion(input){
     for(const [key,value]of Object.entries(settings)){
       if(key==='cutType'){if(id==='ending'||typeof value!=='string'||!Object.hasOwn(CUT_TYPES,value))throw Error('Invalid cut type.');shots[id][key]=value;continue;}
       const field=Object.hasOwn(MOTION_FIELDS,key)?MOTION_FIELDS[key]:null;
-      if(!field||!(controlsFor(id).includes(key)||key==='cutFrames'&&id!=='ending'||key==='joinFrames'&&['reveal','collage','focus3','capabilities'].includes(id))||!Number.isFinite(value)||value<field.min||value>field.max||(field.step===1&&!Number.isInteger(value)))throw Error(`Invalid ${id} animation setting: ${key}`);
+      if(!field||!(controlsFor(id,'refined').includes(key)||key==='cutFrames'&&id!=='ending'||key==='joinFrames'&&['reveal','collage','focus3','capabilities'].includes(id))||!Number.isFinite(value)||value<field.min||value>field.max||(field.step===1&&!Number.isInteger(value)))throw Error(`Invalid ${id} animation setting: ${key}`);
       shots[id][key]=value;
     }
   }
-  return {version:1,shots,elements:validateElements(input.elements)};
+  return {version:1,...(input.style?{style:input.style}:{}),...(input.cadence?{cadence:input.cadence}:{}),shots,elements:validateElements(input.elements)};
 }
 export function settingsFor(source,id){return {...MOTION_DEFAULTS,...source.motion?.shots?.[id]};}
 // Re-time the interior only. Both endpoints remain exact for every speed.

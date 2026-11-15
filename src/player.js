@@ -1,6 +1,6 @@
 import {applyElementEdits} from './v2/element-render.js';
 import {cutFor,compositeCut} from './v2/transitions.js';
-import {validateMotion} from './v2/motion-settings.js';
+import {validateMotion,motionStyle,playbackCadence} from './v2/motion-settings.js';
 import {playbackShots,baseShot,renderShowcase,syncShowcase} from './showcase.js';
 import {preloadMedia} from './media.js';
 import {FPS,SHOTS,TOTAL_FRAMES,getShot,clampFrame,assertPayload} from './contracts.js';
@@ -29,8 +29,8 @@ export async function loadAppFont(p) {
 }
 export function renderShot(id,frame,p,options={}) {
   const spec=playbackShots(p)?.find(s=>s.id===id)??getShot(id);
-  const f=clampFrame(frame,spec.frames);
   const variant=getVariant(id,options.variant).id;
+  const f=p.showcase&&variant==='original'&&motionStyle(p.showcase)==='refined'?Math.max(0,Math.min(spec.frames-1,Number(frame)||0)):clampFrame(frame,spec.frames);
   const renderer=variant==='original'?renderers[id]:variantRenderers[baseShot(id)];
   const settings={wireframe:true,...options,variant};
   const children=p.showcase?renderShowcase(id,f,p,settings,Object.fromEntries(Object.entries(renderers).map(([key,fn])=>[key,(f,p,o)=>o.variant==='original'?fn(f,p,o):variantRenderers[key](f,p,o)]))):renderer(f,p,settings);
@@ -72,14 +72,14 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
   }
   function localFrame(){let f=frame;for(const id of order){const shot=spec(id);if(f<shot.frames)return {shot,frame:f};f-=shot.frames;}return {shot:spec(order.at(-1)),frame:0};}
   function state(){const local=localFrame();return {frame,seconds:frame/FPS,totalFrames:total,duration:total/FPS,playing,loop,shot:local.shot.id,localFrame:local.frame,variant:layouts[local.shot.id]??'original'};}
-  function draw(){if(disposed)return;const local=localFrame();container.replaceChildren(renderSequenceFrame(order,frame,app,{wireframe,variants:layouts}));onFrame(state());}
-  function tick(now){if(!playing||disposed)return;let next=Math.floor((now-origin)*FPS/1000);if(next>=total){if(loop){next%=total;origin=now-next*1000/FPS;}else{playing=false;next=total-1;}}
+  function draw(){if(disposed)return;container.replaceChildren(renderSequenceFrame(order,frame,app,{wireframe,variants:layouts}));onFrame(state());}
+  function tick(now){if(!playing||disposed)return;const rate=playbackCadence(app.showcase);let next=Math.floor((now-origin)*rate/1000)*FPS/rate;if(next>=total){if(loop){next%=total;origin=now-next*1000/FPS;}else{playing=false;next=total-1;}}
     if(frame!==next||!playing){frame=next;draw();syncAudio();}if(playing)raf=requestAnimationFrame(tick);
   }
   const api={
     play(){if(disposed||playing)return;if(frame>=total-1)frame=0;playing=true;origin=performance.now()-frame*1000/FPS;draw();syncAudio(true);raf=requestAnimationFrame(tick);},
     pause(){playing=false;cancelAnimationFrame(raf);audio?.pause();if(!disposed)onFrame(state());},
-    seekFrame(n){if(disposed)return;frame=clampFrame(n,total);origin=performance.now()-frame*1000/FPS;draw();syncAudio();},
+    seekFrame(n){if(disposed)return;frame=app.showcase&&motionStyle(app.showcase)==='refined'?Math.max(0,Math.min(total-1,Number(n)||0)):clampFrame(n,total);origin=performance.now()-frame*1000/FPS;draw();syncAudio();},
     seek(seconds){this.seekFrame(seconds*FPS);},
     setLoop(value){loop=Boolean(value);onFrame(state());},
     setSequence(ids){const next=ids.slice();if(!next.length)throw new Error('Sequence cannot be empty');next.forEach(id=>spec(id));this.pause();order=next;total=order.reduce((n,id)=>n+spec(id).frames,0);frame=0;draw();},

@@ -1,8 +1,8 @@
 export type MotionShotId='hook'|'reveal'|'collage'|'focus'|'focus2'|'focus3'|'capabilities'|'ending';
 export type CutType='cut'|'dissolve'|'slide-left'|'slide-right'|'wipe';
 export interface ElementAdjustment {dx?:number;dy?:number;sx?:number;sy?:number;px?:number;py?:number;hidden?:boolean}
-export interface ShotMotion {tempo?:number;movement?:number;joinFrames?:number;wordFrames?:number;scroll?:number;hover?:number;symbolFrames?:number;cutType?:CutType;cutFrames?:number}
-export interface MotionSettings {version:1;shots:Partial<Record<MotionShotId,ShotMotion>>;elements?:Partial<Record<MotionShotId,Record<string,ElementAdjustment>>>}
+export interface ShotMotion {softness?:number;tempo?:number;movement?:number;joinFrames?:number;wordFrames?:number;scroll?:number;hover?:number;symbolFrames?:number;cutType?:CutType;cutFrames?:number}
+export interface MotionSettings {version:1;style?:'original'|'refined';cadence?:12|24|60;shots:Partial<Record<MotionShotId,ShotMotion>>;elements?:Partial<Record<MotionShotId,Record<string,ElementAdjustment>>>}
 export interface Region {x:number;y:number;width:number;height:number}
 export interface ObservedMedia {src:string;width:number;height:number;region?:Region;hover?:Region}
 export interface FeatureObservation {

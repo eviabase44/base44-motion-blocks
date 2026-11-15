@@ -1,5 +1,7 @@
 // V2 is an extension of the original payload, editor, shot renderers and clock.
 import {BEATS,planSequence,scrollRegion} from './v2/model.js';
+import {renderRefinedFlow} from './v2/refined-flow.js';
+import {motionStyle} from './v2/motion-settings.js';
 import {renderFigmaFlow} from './v2/figma-flow.js';
 import {makeProfile} from './data/profiles.js';
 export const SHOWCASE_SHOTS=BEATS.map(b=>({...b,description:({hook:'Your centered app description opens into a full-width homepage.',reveal:'The homepage scrolls inside the fixed frame, within the supplied content.',collage:'A hovered feature anchors a moving mix of app images and feature cards.',focus:'First selected feature: its page, title and numbered corner.',focus2:'Second selected feature: its page, title and numbered corner.',focus3:'Third selected feature: its page, title and numbered corner.',capabilities:'A benefit and moving image grid exchange left and right positions.',ending:'The symbol row resolves into Proudly built on and the Base44 logo.'})[b.id]}));
@@ -24,7 +26,7 @@ export function syncShowcase(p){
 }
 export function renderShowcase(id,frame,p,o,renderers){
   const plan=syncShowcase(p),base=baseShot(id),variant=o.variant??'original';
-  if(variant==='original')return renderFigmaFlow(id,frame,plan,o);
+  if(variant==='original')return (motionStyle(plan.source)==='refined'?renderRefinedFlow:renderFigmaFlow)(id,frame,plan,o);
   const q=structuredClone(p);if(base==='hook')q.copy.hook=groups(plan.source.description,6,30);q.media.hero=slot({...plan.source.homepage,label:p.app.name});
   if(base==='reveal'){
     q.media.hero.region=scrollRegion(plan.source.homepage,Math.max(0,Math.min(1,(frame-5)/25)));

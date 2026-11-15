@@ -2,6 +2,8 @@
 
 This revision implements the user's new [editable shots](https://www.figma.com/design/fnmudHOvdfW16D6TjhEFz2/Show-off-your-app-v2-%E2%80%94-Editable-shots?node-id=0-1) in the existing v2 editor. Text, shapes, media slots and timing remain code-driven. The Figma document was read, not modified.
 
+The [refined motion pass](motion-refinement.md) adds a second choreography over these same layouts. The source-motion descriptions below document **Earlier motion**; new unsaved editor sessions use **Refined motion**. Explicit templates and previously saved tweaks keep their selected version.
+
 ## Frame mapping
 
 | Shot | Figma nodes | Code timing |

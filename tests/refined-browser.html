@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Refined motion review</title><style>body{font:14px Arial;background:#faf9f6;color:#172027;margin:24px}button{padding:10px 16px;margin:0 8px 12px 0}#stage{max-width:1100px;aspect-ratio:16/9}#result{white-space:pre-wrap}#label{font-size:14px}</style></head><body><h1>Refined motion review</h1><button id="run">Run refinement checks</button><button id="play">Play refined</button><button id="earlier">Play earlier</button><button id="pause">Pause</button><input id="time" aria-label="Time in seconds" type="range" min="0" max="18.99" step="0.0166667" value="0"><input id="seek" aria-label="Seek seconds" type="number" min="0" max="18.99" step="0.05" value="0"><output id="label"></output><div id="stage"></div><pre id="result">Ready</pre><script type="module">
+import {payloadFromShowcase,SHOWCASE_SHOTS} from '../src/showcase.js';
+import {renderShot,renderSequenceFrame,createMotionPlayer,loadAppFont} from '../src/player.js';
+import {refinedPreset} from '../src/v2/refined-motion.js';
+const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),stage=document.querySelector('#stage'),result=document.querySelector('#result'),time=document.querySelector('#time');
+p.showcase.motion=refinedPreset();await loadAppFont(p);let frames=[],last=0;
+const player=await createMotionPlayer(stage,{payload:p,sequence:SHOWCASE_SHOTS.map(s=>s.id),wireframe:false,onFrame(s){time.value=s.seconds;document.querySelector('#label').textContent=`${s.shot} · ${s.seconds.toFixed(2)}s`;if(s.playing){frames.push({t:performance.now(),f:s.frame});}}});
+document.querySelector('#play').onclick=()=>{frames=[];player.setMotion(refinedPreset());player.setSequence(SHOWCASE_SHOTS.map(s=>s.id));player.play();};
+document.querySelector('#earlier').onclick=()=>{player.setMotion({version:1,style:'original',shots:{}});player.setSequence(SHOWCASE_SHOTS.map(s=>s.id));player.play();};
+document.querySelector('#pause').onclick=()=>{player.pause();const elapsed=frames.length>1?(frames.at(-1).t-frames[0].t)/1000:0;result.textContent=JSON.stringify({sampledFrames:frames.length,elapsedSeconds:elapsed,observedUpdatesPerSecond:elapsed?(frames.length-1)/elapsed:0},null,2);};
+time.oninput=()=>{player.pause();player.seek(Number(time.value));};document.querySelector('#seek').oninput=e=>{player.pause();player.seek(Number(e.target.value));};
+document.querySelector('#run').onclick=async()=>{try{player.pause();result.textContent='Running…';let checks=0;const errors=[];
+ const check=(ok,msg)=>{checks++;if(!ok)errors.push(msg);};
+ for(const mode of ['normal','extreme']){const q=structuredClone(p);if(mode==='extreme')for(const [id,s]of Object.entries(q.showcase.motion.shots))Object.assign(s,{...(id!=='ending'?{tempo:1.8}:{}),softness:1,...(['hook','focus','focus2','focus3','collage','capabilities'].includes(id)?{movement:1.5}:{})});
+  for(const shot of SHOWCASE_SHOTS)for(let k=0;k<shot.frames*5;k++){const f=k/5,svg=renderShot(shot.id,f,q,{wireframe:false});check(!/NaN|Infinity/.test(svg.outerHTML),'Nonfinite '+shot.id+'/'+f);check(![...svg.querySelectorAll('[width],[height]')].some(n=>['width','height'].some(a=>Number(n.getAttribute(a))<0)),'Negative geometry '+shot.id+'/'+f);
+   const ids=[...svg.querySelectorAll('[data-element-id]')].map(n=>n.dataset.elementId);check(ids.length===new Set(ids).size,'Duplicate ID '+shot.id+'/'+f);
+   check([...svg.querySelectorAll('rect,text,image,path,line,circle,polygon')].every(n=>n.closest('[data-element-id]')),'Uneditable primitive '+shot.id+'/'+f);
+  }
+ }
+ const a=renderShot('hook',35,p,{wireframe:false}),b=renderShot('reveal',0,p,{wireframe:false});
+ check(a.querySelector('[data-app-page]').outerHTML===b.querySelector('[data-app-page]').outerHTML,'Homepage handoff changes pixels');
+ const rects=s=>[...s.querySelectorAll('[data-corner]')].map(n=>n.outerHTML).join();check(rects(a)===rects(b),'Homepage handoff moves corners');
+ check(renderShot('collage',4.2,p).outerHTML!==renderShot('collage',4.4,p).outerHTML,'Fractional frame interpolation missing');
+ for(const shape of [{width:390,height:844},{width:1440,height:900},{width:1000,height:1000}]){const q=structuredClone(p);q.showcase.features.forEach(f=>{f.page={src:'/assets/base44-logo.svg',...shape};});for(const id of ['focus','focus2','focus3']){const svg=renderShot(id,10.2,q,{wireframe:false});check(svg.querySelector('[data-app-page]').getAttribute('viewBox')===`0 0 ${shape.width} ${shape.height}`,'Cropped full page '+id);}}
+ const adjusted=structuredClone(p);adjusted.showcase.motion.elements={focus:{headline:{dx:12.1,dy:-3,sx:1.2,sy:1.2,px:182,py:87}}};for(const f of [0,2.4,10.2,23])check(renderShot('focus',f,adjusted).querySelector('[data-element-id="headline"]').getAttribute('transform').includes('12.1 -3'),'Layout edit lost');
+ const ids=SHOWCASE_SHOTS.map(s=>s.id);for(const second of [0,2.2,3,5.99,6,7.99,8,10,12,14,15.5,17,18.99]){const a=renderSequenceFrame(ids,second*12,p,{wireframe:false}).outerHTML;check(a===renderSequenceFrame(ids,second*12,p,{wireframe:false}).outerHTML,'Nondeterministic seek');}
+ const end=renderShot('ending',23,p,{wireframe:false});check(end.textContent.includes('Proudly built on'),'Missing credit');check(end.querySelectorAll('image').length===2,'Ending did not settle');
+ player.setMotion(refinedPreset());player.seek(6.35);check(Math.abs(player.getState().seconds-6.35)<1e-9,'Fractional seek rounded');
+ result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',checks,duration:19,errors},null,2);
+ }catch(e){result.textContent='FAIL '+e.stack;}};
+</script></body></html>

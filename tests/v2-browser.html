@@ -5,7 +5,7 @@ import {CUT_TYPES,MOTION_SHOTS,MOTION_FIELDS,controlsFor} from '../src/v2/motion
 import {SHOT_VARIANTS} from '../src/variants.js';
 const result=document.querySelector('#result'),fixture=document.querySelector('#fixture');
 document.querySelector('#run').onclick=async()=>{try{
- result.textContent='Running…';const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),errors=[];await loadAppFont(p);let frames=0;
+ result.textContent='Running…';const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),errors=[];p.showcase.motion={version:1,style:'original',shots:{}};await loadAppFont(p);let frames=0;
  for(const shot of SHOWCASE_SHOTS)for(const variant of SHOT_VARIANTS[shot.id==='focus2'||shot.id==='focus3'?'focus':shot.id])for(let frame=0;frame<shot.frames;frame++){const svg=renderShot(shot.id,frame,p,{wireframe:false,variant:variant.id});frames++;if(/NaN|Infinity/.test(svg.outerHTML))errors.push('Invalid geometry '+shot.id+'/'+frame);}
  // Page views must contain the entire supplied screen, including portrait UI.
  for(const shape of [{width:390,height:844},{width:1440,height:900},{width:1000,height:1000}]){
