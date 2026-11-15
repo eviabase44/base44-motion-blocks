@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><title>Show off v2 integration checks</title></head><body><h1>Show off v2 integration checks</h1><button id="run">Run v2 checks</button><pre id="result">Ready</pre><div id="fixture" style="width:960px;height:540px"></div><script type="module">
 import {payloadFromShowcase,SHOWCASE_SHOTS} from '../src/showcase.js';
-import {renderShot,createMotionPlayer,loadAppFont,FPS,SHOTS} from '../src/player.js';
-import {MATCH_CUTS,MOTION_SHOTS,MOTION_FIELDS,controlsFor} from '../src/v2/motion-settings.js';
+import {renderShot,renderSequenceFrame,createMotionPlayer,loadAppFont,FPS,SHOTS} from '../src/player.js';
+import {CUT_TYPES,MOTION_SHOTS,MOTION_FIELDS,controlsFor} from '../src/v2/motion-settings.js';
 import {SHOT_VARIANTS} from '../src/variants.js';
 const result=document.querySelector('#result'),fixture=document.querySelector('#fixture');
 document.querySelector('#run').onclick=async()=>{try{
@@ -12,19 +12,36 @@ document.querySelector('#run').onclick=async()=>{try{
   const fitted=structuredClone(p);fitted.showcase.features.forEach(f=>{f.page={src:'/assets/base44-logo.svg',...shape};});
   for(const id of ['focus','focus2','focus3']){const svg=renderShot(id,12,fitted,{wireframe:false}),page=svg.querySelector('[data-app-page]');if(page.getAttribute('viewBox')!==`0 0 ${shape.width} ${shape.height}`)errors.push('Cropped full page '+id);}
  }
- // Check the actual rendered shared element on both sides, not metadata alone.
- let matchedJoins=0;
+ // Original motion landmarks: the screen opens late; bundle holds; capabilities flip.
+ const original=(id,f)=>renderShot(id,f,p,{wireframe:false});
+ if(original('hook',21).querySelector('[data-app-page]')||!original('hook',22).querySelector('[data-app-page]'))errors.push('Original app opening changed');
+ if(original('capabilities',17).querySelector('[data-benefit]').getAttribute('x')!=='112'||original('capabilities',18).querySelector('[data-benefit]').getAttribute('x')!=='480')errors.push('Original capability flip changed');
+ if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
  for(const mode of ['default','minimum','maximum','mixed']){
   const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,shots:{}};
   for(const [i,id]of MOTION_SHOTS.entries())adjusted.showcase.motion.shots[id]=mode==='default'?{}:Object.fromEntries(controlsFor(id).map(key=>[key,MOTION_FIELDS[key][mode==='minimum'?'min':mode==='maximum'?'max':i%2?'min':'max']]));
-  for(const cut of MATCH_CUTS){
-   const last=SHOWCASE_SHOTS.find(s=>s.id===cut.from).frames-1,a=renderShot(cut.from,last,adjusted,{wireframe:false}),b=renderShot(cut.to,0,adjusted,{wireframe:false}),selector=`[data-match="${cut.anchor}"]`,out=a.querySelector(selector),incoming=b.querySelector(selector);
-   if(!out||!incoming||out.outerHTML!==incoming.outerHTML)errors.push(`Unmatched ${mode} ${cut.from} → ${cut.to}: ${out?.outerHTML} / ${incoming?.outerHTML}`);
-   matchedJoins++;
+  for(const shot of SHOWCASE_SHOTS)for(let frame=0;frame<shot.frames;frame++){
+   const svg=renderShot(shot.id,frame,adjusted,{wireframe:false});frames++;
+   if(/NaN|Infinity/.test(svg.outerHTML)||[...svg.querySelectorAll('[width],[height]')].some(n=>['width','height'].some(k=>Number(n.getAttribute(k))<0)))errors.push('Invalid adjusted geometry '+shot.id+'/'+frame);
+   const ids=[...svg.querySelectorAll('[data-element-id]')].map(n=>n.dataset.elementId);if(ids.length!==new Set(ids).size)errors.push('Duplicate layer IDs '+shot.id);
+   for(const n of svg.querySelectorAll('rect,text,image,path,line,circle,polygon'))if(!n.closest('[data-element-id]'))errors.push('Uneditable primitive '+shot.id+'/'+n.tagName);
   }
-  for(const shot of SHOWCASE_SHOTS)for(let frame=0;frame<shot.frames;frame++){const svg=renderShot(shot.id,frame,adjusted,{wireframe:false});frames++;if(/NaN|Infinity/.test(svg.outerHTML)||[...svg.querySelectorAll('[width],[height]')].some(n=>['width','height'].some(k=>Number(n.getAttribute(k))<0)))errors.push('Invalid adjusted geometry '+shot.id+'/'+frame);}
  }
- const endA=renderShot('ending',4,p,{wireframe:false}).querySelector('[data-match="brand-lockup"]'),endB=renderShot('ending',5,p,{wireframe:false}).querySelector('[data-match="brand-lockup"]');if(endA.outerHTML!==endB.outerHTML)errors.push('Internal ending cut lost its lockup');
+ let cutChecks=0;
+ for(const cutType of Object.keys(CUT_TYPES))for(const cutFrames of [2,6,12]){
+  const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,shots:Object.fromEntries(MOTION_SHOTS.filter(id=>id!=='ending').map(id=>[id,{cutType,cutFrames}]))};let boundary=0;
+  for(let i=1;i<SHOWCASE_SHOTS.length;i++){
+   boundary+=SHOWCASE_SHOTS[i-1].frames;
+   for(let f=0;f<=cutFrames;f++){
+    const svg=renderSequenceFrame(MOTION_SHOTS,boundary+f,adjusted,{wireframe:false});cutChecks++;
+    if(/NaN|Infinity/.test(svg.outerHTML))errors.push('Invalid cut '+cutType);
+    if(cutType!=='cut'&&f<cutFrames-1&&svg.dataset.cutType!==cutType)errors.push('Missing chosen cut '+cutType);
+    if((cutType==='cut'||f>=cutFrames-1)&&svg.outerHTML!==renderShot(SHOWCASE_SHOTS[i].id,f,adjusted,{wireframe:false}).outerHTML)errors.push('Cut endpoint changed '+cutType);
+   }
+  }
+ }
+ const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,shots:{},elements:{focus:{headline:{dx:12.1,dy:-3,sx:1.2,sy:1.2,px:182,py:87},number:{hidden:true}}}};
+ for(const f of [0,12,23]){const svg=renderShot('focus',f,adjusted,{wireframe:false});if(!svg.querySelector('[data-element-id="headline"]').getAttribute('transform').includes('12.1 -3')||svg.querySelector('[data-element-id="number"]').getAttribute('visibility')!=='hidden')errors.push('Element edits lost in playback');if(svg.querySelector('#element-overlay'))errors.push('Editor handles leaked into render');}
  const player=await createMotionPlayer(fixture,{payload:p,sequence:SHOWCASE_SHOTS.map(s=>s.id),wireframe:false});let start=0;
  for(const shot of SHOWCASE_SHOTS){player.seekFrame(start);if(player.getState().shot!==shot.id)errors.push('Wrong cut '+shot.id);start+=shot.frames;}
  if(player.getState().duration!==19)errors.push('Wrong duration');player.seekFrame(227);if(!fixture.textContent.includes('Proudly built on')||fixture.querySelectorAll('image').length!==2)errors.push('Ending changed');
@@ -33,6 +50,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,matchedJoins,duration:19,checks:['Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Seven matched joins at default, minimum, maximum and mixed settings','Internal ending match','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>

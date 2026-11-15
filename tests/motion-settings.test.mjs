@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {ELEMENT_DEFAULTS,resizedElement,validateElements} from '../src/v2/element-settings.js';
 import {readFile} from 'node:fs/promises';
 import {validateSource} from '../src/v2/model.js';
 import {controlsFor,MOTION_SHOTS,MOTION_FIELDS,validateMotion,motionFrame,makeMotionPreset,readMotionPreset,saveMotion,loadMotion} from '../src/v2/motion-settings.js';
 const fixture=JSON.parse(await readFile(new URL('../examples/v2-wireframe.json',import.meta.url)));
 test('animation settings round-trip without carrying app images into presets',()=>{
- const source=structuredClone(fixture);source.motion={version:1,shots:{hook:{tempo:.65,wordFrames:3},focus3:{hover:9,joinFrames:8}}};
+ const source=structuredClone(fixture);source.motion={version:1,shots:{hook:{tempo:.65,wordFrames:3,cutType:'dissolve',cutFrames:8},focus3:{hover:9,joinFrames:8}},elements:{focus:{headline:{dx:12.1,dy:-3,sx:1.2,sy:1.2,px:182,py:87}}}};
  const memory=new Map(),storage={setItem:(k,v)=>memory.set(k,v),getItem:k=>memory.get(k)??null};
  saveMotion(storage,source);assert.deepEqual(loadMotion(storage,source),source.motion);
  assert.equal(loadMotion(storage,{...source,app:{name:'Other app'}}),null);
@@ -27,4 +28,19 @@ test('resetting one shot preserves other shot settings; storage errors are surfa
  assert.deepEqual(motion.shots.focus,{hover:10});
  assert.throws(()=>saveMotion({setItem(){throw Error('Quota exceeded');}},fixture),/Quota/);
  assert.throws(()=>loadMotion({getItem(){return '{bad';}},fixture));
+});
+
+test('cut settings accept each transition and reject invalid choices and durations',()=>{
+ for(const cutType of ['cut','dissolve','slide-left','slide-right','wipe'])assert.equal(validateMotion({version:1,shots:{hook:{cutType,cutFrames:8}}}).shots.hook.cutType,cutType);
+ for(const value of [{cutType:'zoom'},{cutType:[]},{cutFrames:1},{cutFrames:13},{cutFrames:3.5}])assert.throws(()=>validateMotion({version:1,shots:{hook:value}}));
+ assert.throws(()=>validateMotion({version:1,shots:{ending:{cutType:'wipe'}}}));
+ assert.deepEqual(validateMotion({version:1,shots:{}}).elements,{});
+});
+test('resizing keeps the opposite corner fixed after repeated moves and resizes',()=>{
+ const b={x:120,y:80,width:200,height:100},s={...ELEMENT_DEFAULTS,dx:21,dy:-10,sx:1.4,sy:.8,px:100,py:60};
+ const edge=(v,right,bottom)=>[(right?b.x+b.width:b.x)*v.sx+v.px*(1-v.sx)+v.dx,(bottom?b.y+b.height:b.y)*v.sy+v.py*(1-v.sy)+v.dy];
+ for(const corner of ['nw','ne','sw','se']){const right=corner.includes('w'),bottom=corner.includes('n'),before=edge(s,right,bottom),after=resizedElement(b,s,310,130,corner);assert.deepEqual(edge(after,right,bottom),before);assert.equal(after.sx,1.55);assert.equal(after.sy,1.3);}
+});
+test('element adjustments reject malformed and executable settings',()=>{
+ for(const value of [{bad:{}},{hook:{'bad id':{dx:0}}},{hook:{logo:{sx:0}}},{hook:{logo:{dx:Infinity}}},{hook:{logo:{hidden:'yes'}}},{hook:{logo:{onclick:'evil'}}}])assert.throws(()=>validateElements(value));
 });

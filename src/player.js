@@ -1,3 +1,5 @@
+import {applyElementEdits} from './v2/element-render.js';
+import {cutFor,compositeCut} from './v2/transitions.js';
 import {validateMotion} from './v2/motion-settings.js';
 import {playbackShots,baseShot,renderShowcase,syncShowcase} from './showcase.js';
 import {preloadMedia} from './media.js';
@@ -33,7 +35,19 @@ export function renderShot(id,frame,p,options={}) {
   const settings={wireframe:true,...options,variant};
   const children=p.showcase?renderShowcase(id,f,p,settings,Object.fromEntries(Object.entries(renderers).map(([key,fn])=>[key,(f,p,o)=>o.variant==='original'?fn(f,p,o):variantRenderers[key](f,p,o)]))):renderer(f,p,settings);
   const svg=stage(children,p,id,f);
-  svg.setAttribute('data-variant',variant);return svg;
+  svg.setAttribute('data-variant',variant);if(p.showcase&&variant==='original')applyElementEdits(svg,p.showcase.motion,id);return svg;
+}
+// Cut choices belong to the outgoing shot. Overlaps use the beginning of
+// the next beat, preserving the sequence duration and deterministic seeking.
+export function renderSequenceFrame(order,frame,p,options={}){
+  const specs=playbackShots(p)??SHOTS;let index=0,local=frame;
+  while(index<order.length-1&&local>=specs.find(s=>s.id===order[index]).frames){local-=specs.find(s=>s.id===order[index]).frames;index++;}
+  const id=order[index],variants=options.variants??{},incoming=renderShot(id,local,p,{...options,variant:variants[id]});
+  if(!p.showcase||index===0)return incoming;
+  const previous=order[index-1],cut=cutFor(p,previous);
+  if(cut.cutType==='cut'||local>=cut.cutFrames)return incoming;
+  const outgoing=renderShot(previous,specs.find(s=>s.id===previous).frames-1,p,{...options,variant:variants[previous]});
+  return compositeCut(outgoing,incoming,cut.cutType,local/(cut.cutFrames-1));
 }
 // One frame clock. No CSS easing or wall-clock animation inside a shot.
 export async function createMotionPlayer(container,{payload,shot='hook',sequence,variants={},wireframe=true,onFrame=()=>{},onError=()=>{}}={}) {
@@ -58,7 +72,7 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
   }
   function localFrame(){let f=frame;for(const id of order){const shot=spec(id);if(f<shot.frames)return {shot,frame:f};f-=shot.frames;}return {shot:spec(order.at(-1)),frame:0};}
   function state(){const local=localFrame();return {frame,seconds:frame/FPS,totalFrames:total,duration:total/FPS,playing,loop,shot:local.shot.id,localFrame:local.frame,variant:layouts[local.shot.id]??'original'};}
-  function draw(){if(disposed)return;const local=localFrame();container.replaceChildren(renderShot(local.shot.id,local.frame,app,{wireframe,variant:layouts[local.shot.id]}));onFrame(state());}
+  function draw(){if(disposed)return;const local=localFrame();container.replaceChildren(renderSequenceFrame(order,frame,app,{wireframe,variants:layouts}));onFrame(state());}
   function tick(now){if(!playing||disposed)return;let next=Math.floor((now-origin)*FPS/1000);if(next>=total){if(loop){next%=total;origin=now-next*1000/FPS;}else{playing=false;next=total-1;}}
     if(frame!==next||!playing){frame=next;draw();syncAudio();}if(playing)raf=requestAnimationFrame(tick);
   }

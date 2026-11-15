@@ -23,12 +23,12 @@ The supplied Figma nodes returned no authored motion tracks. Timing is therefore
 
 - Opening: source-indexed word pops, a held frontal title, cursor approach/click, then a window that carries directly into the homepage shot.
 - Settling: a normalized `.74` decay over a declared interval, sampled on the existing 12 fps clock. This is not presented as a universal Base44 curve.
-- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The central component anchors the shot, then its crop opens back out to the full feature page.
+- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The central component anchors the shot and holds through its final frame.
 - Features: a fixed app window, word reveals, then stable readable holds. Observed hover regions can lift by four design pixels. This predicts emphasis over real pixels, not a recorded interaction or a change to the app.
-- Capabilities: the measured file-strip translation (`src/data/reference-tracks.js`) is remapped to subtle vertical grid movement; a continuous lateral move exchanges the two supplied compositions, avoiding an unmatched internal cut.
+- Capabilities: the measured file-strip translation (`src/data/reference-tracks.js`) is remapped to subtle vertical grid movement; the original hard flip at frame 18 exchanges the two supplied compositions.
 - Ending: the B44-06 symbol-row/hold vocabulary, using the user's exact vectors. The symbols are held for five output frames before resolving to the fixed credit and logo.
 
-Camera Language and Eye Candy guide continuity: frontal app views, wide context before individual features, one shared match-cut grammar and a held ending. No invented 3D camera, generic transition pack or fake UI components are introduced.
+Camera Language and Eye Candy guide continuity: frontal app views, wide context before individual features, the original pop/hold cadence and a held ending. No invented 3D camera, generic transition pack or fake UI components are introduced.
 
 ## Host content
 
@@ -44,24 +44,17 @@ The browser harnesses cover every v2 layout/frame, exact cuts, media loading, up
 
 This is a code implementation for design review, not a claim of brand approval or a live telemetry integration. Built-in MP4 export and automatic extraction of exact component/photography regions from every imported site are still separate work.
 
-## Match cuts and editable animation
+## Animation, cuts and element editing
 
-Every boundary in the eight-shot Figma flow has a shared rendered anchor. The renderer changes the context around the anchor; it does not crossfade between whole slides.
+The pre-match-cut Figma animation is restored (the motion from commit `ed5a5e8`). Original hard cuts are the default; the later exit morphs and continuous capability swap have been removed. All eight shots retain their durations, totaling 19 seconds.
 
-| Join | Shared element |
-| --- | --- |
-| Opening → Homepage | Identical homepage viewport and corner positions |
-| Homepage → Bundle | The first feature component, centered in the 218 × 218 window |
-| Bundle → Feature 1 | That component expands back into its whole page at 182,154 / 630 × 364 |
-| Feature 1 → 2 → 3 | A graphic match on the same 630 × 364 app window; screen contents change |
-| Feature 3 → Capabilities | The full third page shrinks into the grid's first tile at 620,17 / 195 × 204 |
-| Capabilities → Ending | Tiles condense into the symbol row; the exact arrow and official logo remain fixed |
+Select a shot and use **Animation** in the inspector. Controls include speed, movement, word interval, app opening time, scroll distance, hover lift and symbol hold, where relevant. Speed retimes the interior while keeping the endpoints. **Cut to next shot** offers Hard cut, Dissolve, Slide left, Slide right and Wipe across. The duration is 2–12 frames. **Preview cut** plays the outgoing tail and following shot. Transitions occupy the beginning of the incoming beat, so the full video remains 19 seconds.
 
-The internal ending change also retains the same arrow and logo. Camera geometry stays frontal. Crops interpolate only between observed regions from the same asset; different assets blend **inside** a moving window before reaching the exact destination. Full feature pages always retain their aspect ratio. Optional looping is a playback restart, not an authored ending-to-opening join.
+With **Edit elements on canvas** enabled, click or tap a visible element to pause and select it. Drag to move; use any corner handle to resize. The **Layer** menu also selects grouped titles, complete screens, obscured layers and individual words. Numeric X/Y offsets and width/height fields accept fine adjustments; aspect ratio is locked by default. Arrow keys nudge 1 design pixel, Shift+Arrow 10, Alt+Arrow 0.1. Nudge buttons offer the same step choices. Undo/redo tracks layout edits separately from motion settings. Layers can be hidden and reset individually. Captured app screens remain image layers; text and controls baked into an image cannot be edited separately.
 
-Select a shot and use **Animation** in the inspector. Available controls depend on the shot: speed, secondary movement, word interval, page scroll distance, hover lift, exit move length, and ending symbol hold. Sliders update the current frame and replay the shot on release. The 19-second sequence length and shared cut poses stay locked. Speed retimes only the interior of a shot, preserving both endpoints. The fixed outro copy/logo remains unchanged.
+Changes apply throughout that shot, on top of its authored animation. Selection boxes and handles are editor-only and never enter the rendered frame. Layout and motion controls apply to the Figma layouts; cut choices also work with legacy gallery alternatives. The inspector offers **Restore Figma flow** when needed.
 
-**Save tweaks** saves all shots in browser localStorage, keyed by app name. A clean reopening of the same app restores saved settings; an explicit template carrying `showcase.motion` takes precedence. **Load saved** discards unsaved motion edits. **Reset shot** resets only the current shot. **Download tweaks** and **Import tweaks** round-trip a small, versioned JSON preset with no app screenshots. Full payload/template exports also include the settings. Browser storage can be cleared, so download a preset for a durable backup. Saving locally does not commit changes to GitHub.
+**Save tweaks** saves motion, cuts and element adjustments for all shots in browser localStorage, keyed by app name. A clean reopening of the same app restores saved settings; an explicit template carrying `showcase.motion` takes precedence. **Load saved** restores that saved state. **Reset motion** resets only the current shot's motion/cut settings, keeping element edits. **Download tweaks** and **Import tweaks** round-trip a versioned JSON preset without app screenshots. Full payload/template exports include all settings. Download a preset for a durable backup; browser saving does not commit changes to GitHub.
 
 Host API:
 
@@ -69,14 +62,17 @@ Host API:
 player.setMotion({
   version: 1,
   shots: {
-    reveal: {tempo: 1.15, scroll: .8, hover: 6, joinFrames: 7},
+    reveal: {tempo: 1.15, scroll: .8, hover: 6, cutType: 'dissolve', cutFrames: 6},
     focus2: {wordFrames: 1, hover: 3},
     ending: {symbolFrames: 8}
+  },
+  elements: {
+    focus2: {headline: {dx: 12, dy: -3, sx: 1.1, sy: 1.1, px: 182, py: 87}}
   }
 });
 const template = player.getPayload(); // includes showcase.motion
 ```
 
-`src/v2/motion-settings.js` validates every field and range. Settings are independent by shot, including the three feature shots. Legacy gallery alternatives remain available but do not inherit the new Figma join contract; the inspector identifies mixed sequences and offers **Restore Figma flow**.
+Stable layer IDs appear in SVG `data-element-id` attributes. `dx` and `dy` are design-space offsets; `sx`/`sy` are scale factors around `px`/`py`. `hidden` toggles visibility. Values are validated before acceptance. Older motion-only presets remain supported.
 
-`tests/v2-browser.html` compares the actual rendered anchor on both sides of all seven joins at default, minimum, maximum and mixed settings, checks all adjusted frames for invalid geometry, and verifies the internal ending match. Node tests cover preset persistence, isolation by app, corruption, reset behavior and source validation.
+`tests/v2-browser.html` covers original animation landmarks, all layout/frame combinations, cut rendering, valid geometry at control extremes, editable layer coverage, and player/payload integration. Node tests cover resize anchors, preset persistence, isolation by app, malformed settings and source validation.

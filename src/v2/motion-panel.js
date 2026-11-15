@@ -1,4 +1,4 @@
-import {controlsFor,MOTION_SHOTS,MOTION_FIELDS,settingsFor,validateMotion,makeMotionPreset,readMotionPreset,saveMotion,loadMotion,MATCH_CUTS} from './motion-settings.js';
+import {controlsFor,MOTION_FIELDS,settingsFor,validateMotion,makeMotionPreset,readMotionPreset,saveMotion,loadMotion,CUT_TYPES} from './motion-settings.js';
 const $=id=>document.getElementById(id);
 const normalized=source=>JSON.stringify(validateMotion(source.motion));
 export function restoreSavedMotion(payload,storage){
@@ -7,7 +7,7 @@ export function restoreSavedMotion(payload,storage){
   if(saved)payload.showcase.motion=saved;
   return payload;
 }
-export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,preview,useFigma,storage}){
+export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,preview,previewCut,useFigma,storage}){
   let saved=null,identity=null,available=false;
   const status=(message,error=false)=>{$('motion-status').textContent=message;$('motion-status').dataset.error=String(error);};
   const source=()=>({...getPayload().showcase,app:getPayload().app});
@@ -20,10 +20,11 @@ export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,pr
   function refresh(){
     const p=getPayload();$('motion-panel').hidden=!p.showcase;if(!p.showcase)return;
     if(identity!==p.app.name){identity=p.app.name;refreshSaved();}
-    const shot=getShot(),id=shot.id,original=getVariant(id)==='original',allMatched=MOTION_SHOTS.every(s=>getVariant(s)==='original'),settings=settingsFor(source(),id);
-    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=allMatched?'MATCH CUTS':'MIXED LAYOUTS';
-    const join=MATCH_CUTS.find(c=>c.from===id);$('motion-cut').textContent=join?join.match+'. Matching poses stay locked.':'The arrow and logo hold through the ending. Final credit stays fixed.';
-    $('motion-fields').hidden=!original;$('motion-layout-note').hidden=allMatched;$('motion-use-figma').hidden=allMatched;
+    const shot=getShot(),id=shot.id,original=getVariant(id)==='original',settings=settingsFor(source(),id);
+    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=original?'ORIGINAL MOTION':'LEGACY LAYOUT';
+    $('motion-cut').textContent=id==='ending'?'Adjust the symbol hold. Move or resize any layer below.':'The earlier animation is restored. Choose how this shot cuts into the next one.';
+    $('motion-fields').hidden=!original;$('motion-layout-note').hidden=original;$('motion-use-figma').hidden=original;
+    $('cut-controls').hidden=id==='ending';$('cut-type').value=settings.cutType;$('cut-frames').value=settings.cutFrames;$('cut-duration-value').value=(settings.cutFrames/12).toFixed(2)+'s';$('cut-duration-field').hidden=settings.cutType==='cut';
     $('motion-reset').disabled=!original;
     $('motion-fields').replaceChildren();
     for(const key of controlsFor(id)){
@@ -34,12 +35,17 @@ export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,pr
     }
     report();
   }
+  for(const [value,label]of Object.entries(CUT_TYPES)){const option=document.createElement('option');option.value=value;option.textContent=label;$('cut-type').append(option);}
+  function setCut(key,value){const m=validateMotion(source().motion),id=getShot().id;m.shots[id]={...m.shots[id],[key]:value};commit(m);}
+  $('cut-type').onchange=()=>{setCut('cutType',$('cut-type').value);$('cut-duration-field').hidden=$('cut-type').value==='cut';previewCut();};
+  $('cut-frames').oninput=()=>{setCut('cutFrames',Number($('cut-frames').value));$('cut-duration-value').value=(Number($('cut-frames').value)/12).toFixed(2)+'s';};
+  $('cut-frames').onchange=previewCut;$('preview-cut').onclick=previewCut;
   $('motion-save').onclick=()=>{try{saveMotion(storage,source());refreshSaved();report();}catch(e){status('Could not save here. Download the tweaks instead. '+e.message,true);}};
   $('motion-load').onclick=()=>{try{const value=loadMotion(storage,source());if(!value)throw Error('No saved tweaks for this app.');commit(value);refresh();preview();}catch(e){status(e.message,true);}};
   $('motion-reset').onclick=()=>{const m=validateMotion(source().motion);delete m.shots[getShot().id];commit(m);refresh();preview();};
   $('motion-preview').onclick=preview;$('motion-use-figma').onclick=()=>{useFigma();refresh();};
   $('motion-download').onclick=()=>{const value=JSON.stringify(makeMotionPreset(source()),null,2),url=URL.createObjectURL(new Blob([value],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='base44-animation-tweaks.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Downloaded all shot tweaks.');};
   $('motion-import').onclick=()=>$('motion-file').click();
-  $('motion-file').onchange=async()=>{const file=$('motion-file').files[0];if(!file)return;try{if(file.size>65536)throw Error('Choose an animation preset smaller than 64 KB.');const value=readMotionPreset(JSON.parse(await file.text()));commit(value);refresh();preview();status('Imported. Save tweaks to keep them on this browser.');}catch(e){status(e.message,true);}finally{$('motion-file').value='';}};
-  return {refresh};
+  $('motion-file').onchange=async()=>{const file=$('motion-file').files[0];if(!file)return;try{if(file.size>1048576)throw Error('Choose an animation preset smaller than 1 MB.');const value=readMotionPreset(JSON.parse(await file.text()));commit(value);refresh();preview();status('Imported. Save tweaks to keep them on this browser.');}catch(e){status(e.message,true);}finally{$('motion-file').value='';}};
+  return {refresh,report};
 }

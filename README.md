@@ -1,6 +1,6 @@
 # Base44 Motion Blocks
 
-**Show off v2:** the existing editor now renders the revised Figma flow in 19 seconds: centered description and app entry, homepage scroll, feature bundle, three ranked feature pages, capability grid, and symbol-to-logo ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Layout and motion mapping](docs/figma-flow.md) · [Integration details](docs/v2-experiment.md). Feature signals remain simulated in the local test. Every cut in this Figma flow now shares a locked visual anchor. Per-shot animation controls support local saving and JSON preset import/export.
+**Show off v2:** the existing editor now renders the revised Figma flow in 19 seconds: centered description and app entry, homepage scroll, feature bundle, three ranked feature pages, capability grid, and symbol-to-logo ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Layout and motion mapping](docs/figma-flow.md) · [Integration details](docs/v2-experiment.md). Feature signals remain simulated in the local test. The original Figma animation is restored. Per-shot controls include cut type and duration. Click elements to move, resize or nudge them; save all motion and layout tweaks locally or export/import a JSON preset.
 
 A code-based editor for personalized, 15-second app showcase videos. Five independent shots share one app payload: copy, colors, font, and screen images. Choose from **17 layouts** and keep the fixed **“Proudly built on” + Base44 logo** ending.
 

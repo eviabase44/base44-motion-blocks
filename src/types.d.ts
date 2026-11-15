@@ -27,6 +27,7 @@ export interface MotionPlayer {
 }
 export function createMotionPlayer(container:HTMLElement,options:{payload:AppPayload;shot?:ShotId;sequence?:ShotId[];variants?:VariantSelection;wireframe?:boolean;onFrame?:(state:FrameState)=>void;onError?:(error:Error)=>void}):Promise<MotionPlayer>;
 export function renderShot(id:ShotId,frame:number,payload:AppPayload,options?:{wireframe?:boolean;variant?:VariantId}):SVGElement;
+export function renderSequenceFrame(order:ShotId[],frame:number,payload:AppPayload,options?:{wireframe?:boolean;variants?:VariantSelection}):SVGElement;
 export function loadAppFont(payload:AppPayload):Promise<void>;
 export interface AppSnapshot {url:string;name:string;description?:string;text:string;headings?:string[];colors?:{value:string;role:string}[];fonts?:{family:string;src:string;weight?:number|string}[];images?:{src:string;label:string;kind?:'screen'}[]}
 export interface GeneratedTemplate {payload:AppPayload;variants:VariantSelection;reasons:Record<Exclude<BaseShotId,'ending'>,string>;source:{url:string;name:string;method:string;imageCount:number;screenCount?:number;font:string|null;capturedAt?:string};sourceAssets:Record<string,{url:string;kind:'image'|'font'}>;warnings:string[];provider:string;duration:15|19;generatedAt:string}
