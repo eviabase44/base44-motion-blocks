@@ -6,7 +6,7 @@ import {validateSource} from '../src/v2/model.js';
 import {controlsFor,MOTION_SHOTS,MOTION_FIELDS,validateMotion,motionFrame,makeMotionPreset,readMotionPreset,saveMotion,loadMotion} from '../src/v2/motion-settings.js';
 const fixture=JSON.parse(await readFile(new URL('../examples/v2-wireframe.json',import.meta.url)));
 test('animation settings round-trip without carrying app images into presets',()=>{
- const source=structuredClone(fixture);source.motion={version:1,shots:{hook:{tempo:.65,wordFrames:3,cutType:'dissolve',cutFrames:8},focus3:{hover:9,joinFrames:8}},elements:{focus:{headline:{dx:12.1,dy:-3,sx:1.2,sy:1.2,px:182,py:87}}}};
+ const source=structuredClone(fixture);source.motion={version:1,shots:{hook:{tempo:.65,wordFrames:3,cutType:'dissolve',cutFrames:8},focus3:{hover:9,joinFrames:8,backgroundMotion:.6},ending:{symbolFrames:8}},elements:{focus:{headline:{dx:12.1,dy:-3,sx:1.2,sy:1.2,px:182,py:87}}}};
  const memory=new Map(),storage={setItem:(k,v)=>memory.set(k,v),getItem:k=>memory.get(k)??null};
  saveMotion(storage,source);assert.deepEqual(loadMotion(storage,source),source.motion);
  assert.equal(loadMotion(storage,{...source,app:{name:'Other app'}}),null);

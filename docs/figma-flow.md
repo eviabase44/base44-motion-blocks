@@ -9,8 +9,8 @@ The [Base44 study restoration](study-motion.md) makes the source-based choreogra
 | Shot | Figma nodes | Code timing |
 | --- | --- | --- |
 | Opening | 9:167 → 9:194 | 0–3s |
-| Homepage scroll | 9:224 | 3–6s |
-| Feature bundle | 9:235 | 6–8s |
+| Homepage scroll | 9:224 | 3–6.5s |
+| Feature bundle | 9:235 | 6.5–8s |
 | Three feature pages | 9:357, 9:411, 9:421 | 8–14s, 2s each |
 | Capabilities | 9:431 → 10:533 | 14–17s |
 | Ending | 9:465 → 9:494 | 17–19s |
@@ -25,10 +25,10 @@ The supplied Figma nodes returned no authored motion tracks. Timing is therefore
 
 - Opening: source-indexed word pops, a held frontal title, cursor approach/click, then a window that carries directly into the homepage shot.
 - Settling: a normalized `.74` decay over a declared interval, sampled on the existing 12 fps clock. This is not presented as a universal Base44 curve.
-- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The central component anchors the shot and holds through its final frame.
-- Features: a fixed app window, word reveals, then stable readable holds. Observed hover regions can lift by four design pixels. This predicts emphasis over real pixels, not a recorded interaction or a change to the app.
+- Bundle: existing measured Present Flow / SH22 independent card trajectories (`src/data/collage.js`), retargeted to the Figma destinations. The clicked asset anchors the shot and retains its source aspect and radius. Related items settle by frame 11, then hold until frame 17. See [asset handoff](asset-handoff.md).
+- Features: a fixed app window and held word reveals, with independently offset background titles entering and drifting behind the page. Observed hover regions can lift by four design pixels. This predicts emphasis over real pixels, not a recorded interaction or a change to the app.
 - Capabilities: the measured file-strip translation (`src/data/reference-tracks.js`) is remapped to subtle vertical grid movement; the original hard flip at frame 18 exchanges the two supplied compositions.
-- Ending: the B44-06 symbol-row/hold vocabulary, using the user's exact vectors. The symbols are held for five output frames before resolving to the fixed credit and logo.
+- Ending: the B44-06 symbol-row/hold vocabulary, using the user's exact vectors. Three held glyph substitutions run across five output frames before resolving to the fixed credit and logo.
 
 Camera Language and Eye Candy guide continuity: frontal app views, wide context before individual features, the original pop/hold cadence and a held ending. No invented 3D camera, generic transition pack or fake UI components are introduced.
 
@@ -48,9 +48,9 @@ This is a code implementation for design review, not a claim of brand approval o
 
 ## Animation, cuts and element editing
 
-The pre-match-cut Figma animation is restored (the motion from commit `ed5a5e8`). Original hard cuts are the default; the later exit morphs and continuous capability swap have been removed. All eight shots retain their durations, totaling 19 seconds.
+The pre-match-cut Figma animation is restored (the motion from commit `ed5a5e8`). Original hard cuts are the default; the later exit morphs and continuous capability swap have been removed. The scroll now takes 3.5 seconds and the bundle 1.5 seconds; the sequence still totals 19 seconds.
 
-Select a shot and use **Animation** in the inspector. Controls include speed, movement, word interval, app opening time, scroll distance, hover lift and symbol hold, where relevant. Speed retimes the interior while keeping the endpoints. **Cut to next shot** offers Hard cut, Dissolve, Slide left, Slide right and Wipe across. The duration is 2–12 frames. **Preview cut** plays the outgoing tail and following shot. Transitions occupy the beginning of the incoming beat, so the full video remains 19 seconds.
+Select a shot and use **Animation** in the inspector. Controls include speed, movement, word interval, app opening time, scroll distance, hover lift, background type travel and symbol flicker duration, where relevant. Speed retimes the interior while keeping the endpoints. **Cut to next shot** offers Hard cut, Dissolve, Slide left, Slide right and Wipe across. The duration is 2–12 frames. **Preview cut** plays the outgoing tail and following shot. Transitions occupy the beginning of the incoming beat, so the full video remains 19 seconds.
 
 With **Edit elements on canvas** enabled, click or tap a visible element to pause and select it. Drag to move; use any corner handle to resize. The **Layer** menu also selects grouped titles, complete screens, obscured layers and individual words. Numeric X/Y offsets and width/height fields accept fine adjustments; aspect ratio is locked by default. Arrow keys nudge 1 design pixel, Shift+Arrow 10, Alt+Arrow 0.1. Nudge buttons offer the same step choices. Undo/redo tracks layout edits separately from motion settings. Layers can be hidden and reset individually. Captured app screens remain image layers; text and controls baked into an image cannot be edited separately.
 
@@ -64,8 +64,8 @@ Host API:
 player.setMotion({
   version: 1,
   shots: {
-    reveal: {tempo: 1.15, scroll: .8, hover: 6, cutType: 'dissolve', cutFrames: 6},
-    focus2: {wordFrames: 1, hover: 3},
+    reveal: {tempo: 1.15, scroll: .8, cutType: 'dissolve', cutFrames: 6},
+    focus2: {wordFrames: 1, hover: 3, backgroundMotion: .8},
     ending: {symbolFrames: 8}
   },
   elements: {

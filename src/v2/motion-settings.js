@@ -1,7 +1,7 @@
 // Serializable per-shot motion, cut and element adjustments.
 import {validateElements} from './element-settings.js';
 export const MOTION_SHOTS=['hook','reveal','collage','focus','focus2','focus3','capabilities','ending'];
-export const MOTION_DEFAULTS=Object.freeze({tempo:1,movement:1,joinFrames:7,wordFrames:2,scroll:1,hover:4,symbolFrames:5,cutType:'cut',cutFrames:6,softness:.5});
+export const MOTION_DEFAULTS=Object.freeze({tempo:1,movement:1,joinFrames:7,wordFrames:2,scroll:1,backgroundMotion:1,hover:4,symbolFrames:5,cutType:'cut',cutFrames:6,softness:.5});
 export const MOTION_FIELDS={
   softness:{label:'Landing softness',min:0,max:1,step:.05,format:v=>Math.round(v*100)+'%'},
   tempo:{label:'Animation speed',min:.5,max:2,step:.05,format:v=>v.toFixed(2)+'×'},
@@ -9,13 +9,14 @@ export const MOTION_FIELDS={
   joinFrames:{label:'App opening time',min:4,max:12,step:1,format:v=>(v/12).toFixed(2)+'s'},
   wordFrames:{label:'Word interval',min:0,max:4,step:1,format:v=>(v/12).toFixed(2)+'s'},
   scroll:{label:'Page scroll distance',min:0,max:1,step:.05,format:v=>Math.round(v*100)+'%'},
+  backgroundMotion:{label:'Background type travel',min:0,max:1.5,step:.05,format:v=>Math.round(v*100)+'%'},
   hover:{label:'Card hover lift',min:0,max:12,step:1,format:v=>v+'px'},
   cutFrames:{label:'Cut duration',min:2,max:12,step:1,format:v=>(v/12).toFixed(2)+'s'},
-  symbolFrames:{label:'Symbol row hold',min:2,max:16,step:1,format:v=>(v/12).toFixed(2)+'s'}
+  symbolFrames:{label:'Symbol flicker duration',min:2,max:16,step:1,format:v=>(v/12).toFixed(2)+'s'}
 };
 export const CUT_TYPES={cut:'Hard cut',dissolve:'Dissolve','slide-left':'Slide left','slide-right':'Slide right',wipe:'Wipe across'};
-const originalControls=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['tempo','scroll','hover'],collage:['tempo','movement'],focus:['tempo','wordFrames','hover'],focus2:['tempo','wordFrames','hover'],focus3:['tempo','wordFrames','hover'],capabilities:['tempo','movement'],ending:['symbolFrames']})[id]??[];
-export const controlsFor=(id,style='original')=>style==='refined'?[...new Set([...originalControls(id),...(['hook','focus','focus2','focus3'].includes(id)?['movement']:[]),'softness'])]:originalControls(id);
+const originalControls=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['tempo','scroll'],collage:['tempo','movement'],focus:['tempo','wordFrames','hover','backgroundMotion'],focus2:['tempo','wordFrames','hover','backgroundMotion'],focus3:['tempo','wordFrames','hover','backgroundMotion'],capabilities:['tempo','movement'],ending:['symbolFrames']})[id]??[];
+export const controlsFor=(id,style='original')=>style==='refined'?[...new Set([...originalControls(id).filter(k=>k!=='backgroundMotion'),...(id==='reveal'?['hover']:[]),...(['hook','focus','focus2','focus3'].includes(id)?['movement']:[]),'softness'])]:originalControls(id);
 export const motionStyle=source=>source?.motion?.style??'original';
 export const playbackCadence=source=>motionStyle(source)==='refined'?(source.motion.cadence??60):12;
 // Restore the source-based Figma adaptation. Reset timing without changing the
@@ -33,7 +34,7 @@ export function validateMotion(input){
     for(const [key,value]of Object.entries(settings)){
       if(key==='cutType'){if(id==='ending'||typeof value!=='string'||!Object.hasOwn(CUT_TYPES,value))throw Error('Invalid cut type.');shots[id][key]=value;continue;}
       const field=Object.hasOwn(MOTION_FIELDS,key)?MOTION_FIELDS[key]:null;
-      if(!field||!(controlsFor(id,'refined').includes(key)||key==='cutFrames'&&id!=='ending'||key==='joinFrames'&&['reveal','collage','focus3','capabilities'].includes(id))||!Number.isFinite(value)||value<field.min||value>field.max||(field.step===1&&!Number.isInteger(value)))throw Error(`Invalid ${id} animation setting: ${key}`);
+      if(!field||!(controlsFor(id,'refined').includes(key)||originalControls(id).includes(key)||key==='cutFrames'&&id!=='ending'||key==='hover'&&id==='reveal'||key==='joinFrames'&&['reveal','collage','focus3','capabilities'].includes(id))||!Number.isFinite(value)||value<field.min||value>field.max||(field.step===1&&!Number.isInteger(value)))throw Error(`Invalid ${id} animation setting: ${key}`);
       shots[id][key]=value;
     }
   }

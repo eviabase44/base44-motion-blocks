@@ -7,11 +7,11 @@ The user rejected the smooth refinement because it no longer resembled the Base4
 | Shot | Active motion | Removed from the default |
 | --- | --- | --- |
 | Opening | Whole words appear on held keys, cursor lands, app opens late. | Masked word rises, opacity ramps, curved cursor path. |
-| Homepage | Two bounded scroll moves with a pause, predicted component hover. | One long smoothed scan and cursor retirement fade. |
+| Homepage | Two deeper bounded scroll moves, click and intact asset isolation. | One long smoothed scan and cursor retirement fade. |
 | Bundle | Existing independently measured SH22 paths retargeted to the Figma slots. | Newly invented clockwise fan and generic staggered fade-ins. |
-| Features 1–3 | Stepped screen landing, held word reveals, stable reading hold. | Per-word masks and delayed number-block fades. |
+| Features 1–3 | Stepped screen landing, held word reveals, travelling background type. | Per-word masks and delayed number-block fades. |
 | Capabilities | Existing measured file-strip track and hard left/right layout exchange. | Row-by-row soft entrances and extra anticipatory text drift. |
-| Ending | Symbol-row hold switches to the fixed credit; lockup stays registered. | Staggered glyph arrivals and dissolving credit assembly. |
+| Ending | Held glyph substitutions switch to the fixed credit; lockup stays registered. | Staggered glyph arrivals and dissolving credit assembly. |
 
 The camera stays frontal and deviceless, moving from the whole app into its features and back out to capabilities. The bundle is the main motion device; hard cuts are the default join grammar. The user's 19-second score, app palette/font, Figma compositions, soundtrack and final credit take precedence over historical defaults for other campaigns.
 
@@ -30,3 +30,5 @@ This is the previous **adaptation to the user's Figma layouts**, not a claim of 
 The smooth experiment remains accessible for old preset compatibility, clearly labeled **archived**. Loading an explicit or saved preset does not silently rewrite it. Use the restore button, then **Save tweaks**, to replace that app's saved motion.
 
 Verification covers default/preset persistence, geometry, cut choices, editable layers, existing motion landmarks and the unchanged 19-second duration. Technical checks do not award a creative score or imply user approval.
+
+The [asset handoff revision](asset-handoff.md) adds source-specific related media and deeper scrolling while retaining this study cadence.

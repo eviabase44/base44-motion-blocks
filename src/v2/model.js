@@ -3,8 +3,8 @@ import {validateMotion} from './motion-settings.js';
 export const FPS = 12;
 export const BEATS = Object.freeze([
   {id:'hook',name:'Opening',frames:36},
-  {id:'reveal',name:'Homepage scroll',frames:36},
-  {id:'collage',name:'Feature bundle',frames:24},
+  {id:'reveal',name:'Homepage scroll',frames:42},
+  {id:'collage',name:'Feature bundle',frames:18},
   {id:'focus',name:'Feature 1',frames:24},
   {id:'focus2',name:'Feature 2',frames:24},
   {id:'focus3',name:'Feature 3',frames:24},
@@ -31,12 +31,29 @@ export function validateSource(input){
   function media(m,name){
     if(!m||!safeURL(m.src)||!finite(m.width,80,12000)||!finite(m.height,80,20000))throw Error(`${name} needs a valid image URL and dimensions.`);
     if(m.region)region(m.region,m,name+' region');
+    if(m.cornerRadius!==undefined&&!finite(m.cornerRadius,0,Math.min(sourceRegion(m).width,sourceRegion(m).height)/2))throw Error(`${name}: cornerRadius must fit the asset silhouette.`);
     if(m.hover){region(m.hover,m,name+' hover');const r=sourceRegion(m);if(m.hover.x<r.x||m.hover.y<r.y||m.hover.x+m.hover.width>r.x+r.width||m.hover.y+m.hover.height>r.y+r.height)throw Error(`${name} hover must fit inside the selected region.`);}
   }
   media(p.homepage,'Homepage');
   if(p.benefit!==undefined)requireText(p.benefit,'Benefit',100);
   if(p.images!==undefined){if(!Array.isArray(p.images)||p.images.length>20)throw Error('Provide up to 20 app images.');p.images.forEach((m,i)=>media(m,`App image ${i+1}`));}
   if(p.homepage.windowHeight!==undefined&&!finite(p.homepage.windowHeight,80,(p.homepage.region?.height??p.homepage.height)))throw Error('Homepage windowHeight exceeds the available capture.');
+  if(p.bundle!==undefined){
+    const b=p.bundle;requireText(b?.assetId,'Bundle asset ID',80);requireText(b?.label,'Bundle label',80);
+    media(b.media,'Bundle asset');region(b.anchor,p.homepage,'Bundle click target');
+    const r=sourceRegion(p.homepage),a=b.anchor;
+    if(a.x<r.x||a.y<r.y||a.x+a.width>r.x+r.width||a.y+a.height>r.y+r.height)throw Error('Bundle click target must be inside the homepage.');
+    if(!Array.isArray(b.related)||b.related.length>8)throw Error('Provide up to eight related asset items.');
+    const relatedIds=new Set();
+    for(const item of b.related){
+      requireText(item.id,'Related item ID',80);requireText(item.label,'Related item label',80);
+      if(relatedIds.has(item.id))throw Error('Related item IDs must be unique.');relatedIds.add(item.id);
+      if(item.assetId!==b.assetId)throw Error('Every bundle item must belong to the clicked asset.');
+      if(Boolean(item.media)===Boolean(item.detail))throw Error('A related item needs either media or a detail.');
+      if(item.media)media(item.media,item.label);
+      if(item.detail){requireText(item.detail.label,'Detail label',40);requireText(item.detail.value,'Detail value',70);}
+    }
+  }
   if(!Array.isArray(p.features)||p.features.length<3||p.features.length>40)throw Error('Provide 3–40 feature candidates.');
   const ids=new Set();
   for(const f of p.features){

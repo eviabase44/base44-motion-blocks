@@ -6,13 +6,13 @@ The payload remains version 1 with an optional `showcase` extension. Existing pa
 
 ## Updated sequence
 
-The 2026-11-15 Figma revision is the current default. It keeps the approved total of **19 seconds, 228 frames at 12 fps**. The opening and homepage form a six-second entry; the added capability section uses three seconds before the ending.
+The 2026-11-15 Figma revision is the current default. It keeps the approved total of **19 seconds, 228 frames at 12 fps**. The opening and homepage form a 6.5-second entry; the added capability section uses three seconds before the ending.
 
 | Time | Shot | Current behavior |
 | --- | --- | --- |
 | 0–3s | Opening | Centered app description, cursor click, expanding app window. |
-| 3–6s | Homepage scroll | Same window; bounded page movement and predicted hover emphasis. |
-| 6–8s | Feature bundle | Selected components and separate app imagery on retargeted measured card paths. |
+| 3–6.5s | Homepage scroll | Same window; deeper bounded page movement, click and asset isolation. |
+| 6.5–8s | Feature bundle | The clicked asset and only its related content, on measured card paths. |
 | 8–10s | Feature 1 | First selected page, title and numbered corner. |
 | 10–12s | Feature 2 | Second selected page, title and numbered corner. |
 | 12–14s | Feature 3 | Third selected page, title and numbered corner. |
@@ -43,7 +43,7 @@ The existing inspector includes **Feature selection · SIMULATED DATA**. Change 
 
 Images include decoded `width` and `height`. Optional `region` bounds identify an observed component in source pixels. The media renderer contains these regions without distortion. The default v2 page slots contain full screens. Component slots can use an explicitly observed hover region. Extremely wide list rows use their supplied page in square montage slots to avoid unreadable strips. Other existing layouts retain their earlier compositions.
 
-Optional `images` holds up to 20 actual app artwork/photo observations, separate from feature UI. The bundle and capability grid use the first three. Missing images are omitted rather than replaced with invented photography. Optional `benefit` supplies the capability headline.
+Optional `images` holds up to 20 actual app artwork/photo observations, separate from feature UI. The capability grid uses the first three. The feature bundle instead uses explicit `bundle.related` associations; see [asset handoff](asset-handoff.md). Missing images are omitted rather than replaced with invented photography. Optional `benefit` supplies the capability headline.
 
 Homepage `windowHeight` defines the scrolling viewport in source pixels. Movement stays within supplied capture bounds. A short viewport capture supports a short pan; a genuine full-page capture supports a longer scroll. The renderer does not invent offscreen content.
 

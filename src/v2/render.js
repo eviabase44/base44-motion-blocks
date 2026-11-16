@@ -6,9 +6,15 @@ const out=t=>1-Math.pow(1-clamp(t),3);
 const mix=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
 export function imageRegion(media,region,box,attrs={}){
   const f=fitRect(region,box);
-  if(media.wireframe)return group([rect(f.x,f.y,f.width,f.height,media.color??'#a9b8ee'),el('text',{x:f.x+f.width/2,y:f.y+f.height/2,'text-anchor':'middle','font-family':media.fontFamily??'Arial','font-size':Math.min(13,f.width/15),fill:'#172027'},[media.label??'APP SCREEN'])]);
+  if(media.wireframe)return group([rect(f.x,f.y,f.width,f.height,media.color??'#a9b8ee',{rx:(media.cornerRadius??0)*f.scale}),el('text',{x:f.x+f.width/2,y:f.y+f.height/2,'text-anchor':'middle','font-family':media.fontFamily??'Arial','font-size':Math.min(13,f.width/15),fill:'#172027'},[media.label??'APP SCREEN'])]);
+  // The radius is measured in source pixels and scales with the complete
+  // asset. A nested viewport keeps its real outline without square backing.
+  // Clip in source coordinates. CSS inset() on nested SVG uses the descendant
+  // image bounds in WebKit, leaking the rest of the screenshot around the card.
+  const clipId='asset-outline-'+[region.x,region.y,region.width,region.height,media.cornerRadius??0].join('-').replaceAll('.','p');
   return el('svg',{x:f.x,y:f.y,width:f.width,height:f.height,viewBox:`${region.x} ${region.y} ${region.width} ${region.height}`,overflow:'hidden','data-media':media.src,...attrs},[
-    el('image',{href:media.src,x:0,y:0,width:media.width,height:media.height,preserveAspectRatio:'none'})
+    el('defs',{},[el('clipPath',{id:clipId,clipPathUnits:'userSpaceOnUse'},[rect(region.x,region.y,region.width,region.height,'white',{rx:media.cornerRadius??0})])]),
+    el('image',{href:media.src,x:0,y:0,width:media.width,height:media.height,preserveAspectRatio:'none','clip-path':`url(#${clipId})`})
   ]);
 }
 function lines(value,p,maxWidth,size,maxLines=3){

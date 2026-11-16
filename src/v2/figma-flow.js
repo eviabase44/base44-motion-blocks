@@ -8,6 +8,7 @@ import {sourceRegion,fitRect,BEATS} from './model.js';
 import {imageRegion} from './render.js';
 import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
+import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox} from './asset-bundle.js';
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 // Sampled at 12 fps from a 24 fps score. No wall-clock or random state.
@@ -24,8 +25,8 @@ function surface(p){return mix(p.theme.surface,p.theme.ink,.08);}
 function background(p,word=p.app.name){return [layer('background','Background',rect(0,0,960,540,surface(p))),layer('watermark','App watermark',text(word,-87,179,230,p,{opacity:.04}))];}
 function markers(box,p,size=10){return [[box.x-size,box.y-size],[box.x+box.width,box.y-size],[box.x-size,box.y+box.height],[box.x+box.width,box.y+box.height]].map(([x,y],i)=>layer(`corner-${i}`,`Corner ${i+1}`,rect(x,y,size,size,p.theme.ink,{'data-corner':true})));}
 function media(m,p,wireframe,index=0){return {...m,wireframe,color:m.color??p.theme.blocks?.[index%p.theme.blocks.length],fontFamily:p.typography.family,label:m.label??'APP SCREEN'};}
-function wrap(value,p,size,maxWidth,maxLines){
-  for(let s=size;s>=24;s-=1){const rows=[];let row='';for(const word of value.trim().split(/\s+/)){const next=row?row+' '+word:word;if(row&&width(next,s,p)>maxWidth){rows.push(row);row=word;}else row=next;}if(row)rows.push(row);if(rows.length<=maxLines&&rows.every(r=>width(r,s,p)<=maxWidth))return {rows,size:s};}
+function wrap(value,p,size,maxWidth,maxLines,minSize=24){
+  for(let s=size;s>=minSize;s-=1){const rows=[];let row='';for(const word of value.trim().split(/\s+/)){const next=row?row+' '+word:word;if(row&&width(next,s,p)>maxWidth){rows.push(row);row=word;}else row=next;}if(row)rows.push(row);if(rows.length<=maxLines&&rows.every(r=>width(r,s,p)<=maxWidth))return {rows,size:s};}
   throw Error('Shorten the copy to keep this frame readable.');
 }
 function words(value,x,y,size,p,frame,start=0,interval=2,prefix='headline'){let offset=x;return value.split(/\s+/).map((word,i)=>{const w=width(word+' ',size,p),visible=frame>=start+i*interval;const n=text(word,offset,y,size,p,{opacity:visible?1:0,'data-type-word':i});offset+=w;return layer(`${prefix}-word-${i}`,`Word: ${word}`,n);});}
@@ -53,10 +54,35 @@ function opening(plan,frame,o){
   if(frame<27){const c=land(frame,12,9),pressed=frame===22?.85:1;n.push(layer('cursor','Cursor',cursor(775+(610-775)*c,346+(277-346)*c,pressed,p)));}
   return n;
 }
-function homepage(plan,frame,o){const p=plan.source,n=background(p),scroll=frame<8?0:frame<21?.5*land(frame,8,8):.5+.5*land(frame,23,8),a=page(p.homepage,HOME,p,frame,o.wireframe,scroll*o.motion.scroll,true,o.motion.hover);n.push(layer('screen','App screen',a.nodes,a.box),...markers(a.box,p));return n;}
+// Two scroll pushes, then a deliberate click and a six-frame isolation move.
+// The last source-page frame and first bundle frame share the very same asset.
+export function homepagePose(plan,frame,motion){
+  const p=plan.source,b=assetBundle(plan),r0=pageRegion(p.homepage,0),end=assetScrollProgress(p.homepage,b,motion.scroll,r0.height);
+  const progress=(frame<17?.46*land(frame,3,13):.46+.54*land(frame,18,11))*end;
+  const region=pageRegion(p.homepage,progress),anchor=anchorOnPage(b.anchor,region,HOME),home=assetHome(b.media);
+  const box=anchor?blendBox(fitRect(sourceRegion(b.media),anchor),home,land(frame,34,6)):home;
+  return {bundle:b,progress,anchor,box,isolating:frame>=34&&Boolean(anchor)};
+}
+function homepage(plan,frame,o){
+  const p=plan.source,n=background(p),pose=homepagePose(plan,frame,o.motion);
+  if(frame<36||!pose.anchor){const a=page(p.homepage,HOME,p,frame,o.wireframe,pose.progress);n.push(layer('screen','App screen',a.nodes,a.box),...markers(a.box,p));}
+  if(pose.anchor&&frame>=30){
+    const b=pose.box,m=media(pose.bundle.media,p,o.wireframe);
+    // No rectangular backing: keep the measured source silhouette and content.
+    n.push(layer('selected-asset',pose.bundle.label,imageRegion(m,sourceRegion(m),b,{'data-clicked-asset':pose.bundle.assetId}),b));
+    if(frame>=36)n.push(...markers(b,p));
+    const a=land(frame,30,2),press=frame===33?.78:1;
+    n.push(layer('cursor','Cursor',cursor(b.x+b.width*.72+38*(1-a),b.y+b.height*.62+25*(1-a),press,p)));
+  }
+  return n;
+}
 function feature(plan,id,frame,o){
   const p=plan.source,i=FOCUS_IDS.indexOf(id),f=plan.selected[i],n=[layer('background','Background',rect(0,0,960,540,surface(p)))];
-  const wm=wrap(f.name,p,301.529,1150,2);wm.rows.forEach((r,j)=>n.push(layer(`watermark-${j}`,`Watermark ${j+1}`,text(r,-89,25+j*233,wm.size,p,{opacity:.04}))));
+  const wm=wrap(f.name,p,301.529,1150,2);
+  // Large type travels behind the held UI on separate, offset keys. Direction
+  // alternates per feature; arrival is quick, followed by a slow lateral drift.
+  wm.rows.forEach((r,j)=>{const dir=i%2?-1:1,enter=land(frame,j*2,7),drift=clamp((frame-9)/14),dx=dir*((1-enter)*320-drift*48)*o.motion.backgroundMotion,dy=(1-enter)*36*o.motion.backgroundMotion;
+    n.push(layer(`watermark-${j}`,`Watermark ${j+1}`,text(r,-89+dx,25+j*233+dy,wm.size,p,{opacity:.04,'data-background-motion':true})));});
   const copy=wrap(f.title,p,44,630,1),y=87;
   n.push(layer('headline','Feature title',words(copy.rows[0],182,y,copy.size,p,frame,0,o.motion.wordFrames)));
   const m={...(f.page??f.media),label:f.name},offset=frame<1?17:frame<2?5:0,box={...FEATURE,y:FEATURE.y+offset};
@@ -75,17 +101,29 @@ function component(f){
   if(r.width/r.height>3&&f.page)return {...f.page,label:f.name};
   return {...f.media,label:f.name,region:r};
 }
+function bundleDetail(item,b,p){
+  const w=210,h=210*b.height/b.width,inset=18,value=wrap(item.detail.value,p,29,w-inset*2,6,12),label=wrap(item.detail.label.toUpperCase(),p,10,w-inset*2,2,8),top=Math.max(50,(h-value.rows.length*value.size)/2);
+  return group([rect(0,0,w,h,p.theme.surface),...label.rows.map((r,j)=>text(r,inset,inset+j*label.size,label.size,p,{opacity:.65})),...value.rows.map((r,j)=>text(r,inset,top+j*value.size,value.size,p))],{transform:`translate(${b.x} ${b.y}) scale(${b.width/w})`});
+}
 function bundle(plan,frame,o){
-  const p=plan.source,n=[layer('background','Background',rect(0,0,960,540,p.theme.accent)),layer('watermark-0','Watermark 1',text(p.app.name,-598,3,230,p,{opacity:.04})),layer('watermark-1','Watermark 2',text(p.app.name,198,370,230,p,{opacity:.04}))],pictures=imagery(plan);
-  const roles=[component(plan.selected[0]),component(plan.selected[1]),component(plan.selected[2]),pictures[0],pictures[1],pictures[2],component(plan.selected[2]),component(plan.selected[1]),component(plan.selected[0])];
-  for(const i of [4,5,8,1,6,7,2,3,0]){
-    if(!roles[i])continue;let b={...BUNDLE[i]};
-    if(i){const track=CARD_TRACKS[`card${i+1}`].samples,j=Math.min(25,Math.round(frame*25/18)),pose=track[j],home=track[25];if(!pose)continue;const s=Math.max(0,1+(pose[2]/home[2]-1)*o.motion.movement);b={x:b.x+(pose[0]-home[0])*.7*o.motion.movement,y:b.y+(pose[1]-home[1])*.7*o.motion.movement,width:b.width*s,height:b.height*s};}
-    else {const s=frame<3?[.88,.98,1][Math.floor(frame)]:1;b={x:b.x+(b.width-b.width*s)/2,y:b.y+(b.height-b.height*s)/2-4*land(frame,14,4)*o.motion.movement,width:b.width*s,height:b.height*s};}
-    const m=media({...roles[i],label:roles[i].label??plan.selected[i%3].name},p,o.wireframe,i),r=sourceRegion(m),f=fitRect(r,b);
-    n.push(layer(`card-${i}`,`${i===0?'Center card':'Card '+(i+1)} · ${m.label}`,imageRegion(m,r,b,{'data-bundle-role':i>=3&&i<=5?'app-image':'feature'}),f));
-    if(i===0){n.push(...markers(f,p));const a=land(frame,8,6);n.push(layer('cursor','Cursor',cursor(805+(f.x+f.width*.72-805)*a,270+(f.y+f.height*.6-270)*a,1,p)));}
-  }
+  const p=plan.source,bundle=assetBundle(plan),n=[layer('background','Background',rect(0,0,960,540,p.theme.accent)),layer('watermark-0','Watermark 1',text(p.app.name,-598,3,230,p,{opacity:.04})),layer('watermark-1','Watermark 2',text(p.app.name,198,370,230,p,{opacity:.04}))];
+  // Each related item is explicitly attached to this product/asset ID. Never
+  // substitute other features or random app-library images to fill the layout.
+  const slots=[3,1,4,2,5,6,7,8];
+  bundle.related.forEach((item,k)=>{
+    const i=slots[k],track=CARD_TRACKS[`card${i+1}`].samples,j=Math.min(25,Math.round(frame*25/11)),pose=track[j],home=track[25];if(!pose)return;
+    const s=Math.max(0,1+(pose[2]/home[2]-1)*o.motion.movement),base=BUNDLE[i],b={x:base.x+(pose[0]-home[0])*.7*o.motion.movement,y:base.y+(pose[1]-home[1])*.7*o.motion.movement,width:base.width*s,height:base.height*s};
+    if(!s)return;
+    // Edge-cropped artwork follows the Figma field. A factual detail must stay
+    // readable as a complete tile, including its value below the label.
+    if(item.detail){b.x=Math.max(20,Math.min(940-b.width,b.x));b.y=Math.max(20,Math.min(520-b.height,b.y));}
+    const m=item.media?media({...item.media,label:item.label},p,o.wireframe,i):null,r=m?sourceRegion(m):null,box=m?fitRect(r,b):b;
+    const node=m?imageRegion(m,r,b,{'data-related-asset':item.assetId}):group([bundleDetail(item,b,p)],{'data-related-asset':item.assetId});
+    n.push(layer(`card-${i}`,item.label,node,box));
+  });
+  const m=media({...bundle.media,label:bundle.label},p,o.wireframe),b=assetHome(m);
+  n.push(layer('card-0',`Center card · ${bundle.label}`,imageRegion(m,sourceRegion(m),b,{'data-clicked-asset':bundle.assetId}),b),...markers(b,p));
+  if(frame<4)n.push(layer('cursor','Cursor',cursor(b.x+b.width*.72,b.y+b.height*.62,1,p)));
   return n;
 }
 function capabilities(plan,frame,o){
@@ -102,8 +140,13 @@ function capabilities(plan,frame,o){
 }
 function ending(plan,frame,o){
   const p=plan.source,n=[layer('background','Background',rect(0,0,960,540,p.theme.surface))];
-  // Figma's two ending states: a brief row of native symbols, then the credit.
-  if(frame<o.motion.symbolFrames){for(let i=0;i<7;i++){const height=i===1?28.796:i===5?27.102:i===6?25.067:23.714,width=i===5?27.102:i===6?25.006:23.714;n.push(layer(`symbol-${i}`,`Symbol ${i+1}`,el('image',{href:symbols[i],x:i===6?506.087:251+i*42,y:249+(23.714-height)/2,width,height,'data-symbol':i})));}}
+  // B44-06 F1200–1206 uses held glyph substitutions, not a row fade.
+  // Adapt its 3/1/3 native-frame holds to these seven Figma symbols at 12 fps.
+  if(frame<o.motion.symbolFrames){
+    const native=Math.floor(frame/Math.max(1,o.motion.symbolFrames-1)*6),key=native<3?0:native<4?1:2,orders=[[0,1,2,3,4,5,6],[3,0,5,2,6,1,4],[5,3,1,0,2,4,6]],order=orders[key];
+    for(let i=0;i<7;i++){const symbol=order[i],height=symbol===1?28.796:symbol===5?27.102:symbol===6?25.067:23.714,w=symbol===5?27.102:symbol===6?25.006:23.714;
+      n.push(layer(`symbol-${i}`,`Symbol ${i+1}`,el('image',{href:symbols[symbol],x:(i===6?506.087:251+i*42)+(23.714-w)/2,y:249+(23.714-height)/2,width:w,height,'data-symbol':symbol,'data-symbol-key':key})));}
+  }
   else {n.push(layer('credit','Proudly built on',text('Proudly built on',251,241,33.602,p,{'data-credit':true})),layer('symbol-6','Arrow',el('image',{href:symbols[6],x:506.087,y:247,width:25.006,height:25.067})));}
   n.push(layer('logo','Base44 logo',el('image',{href:logo,x:562,y:245,width:147,height:25.801,'aria-label':'Base44 official logo'})));
   return n;
@@ -115,5 +158,5 @@ export function renderFigmaFlow(id,rawFrame,plan,options){
   return [group(fn(plan,frame,options),{'data-design-node':FIGMA_NODES[id].join(','),'data-design-revision':'2026-11-15'})];
 }
 
-// Shared layout geometry; the earlier animation above remains unchanged.
+// Shared layout geometry for the archived smooth experiment.
 export {HOME,FEATURE,FOCUS_IDS,logo,symbols,surface,background,markers,media,wrap,component,imagery,BUNDLE};

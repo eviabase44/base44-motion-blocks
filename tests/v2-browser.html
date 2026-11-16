@@ -17,6 +17,22 @@ document.querySelector('#run').onclick=async()=>{try{
  if(original('hook',21).querySelector('[data-app-page]')||!original('hook',22).querySelector('[data-app-page]'))errors.push('Original app opening changed');
  if(original('capabilities',17).querySelector('[data-benefit]').getAttribute('x')!=='112'||original('capabilities',18).querySelector('[data-benefit]').getAttribute('x')!=='480')errors.push('Original capability flip changed');
  if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
+ // The asset identity and exact source viewport must survive the cut unchanged.
+ const tail=original('reveal',41).querySelector('[data-clicked-asset]'),head=original('collage',0).querySelector('[data-clicked-asset]');
+ if(source.bundle){
+  if(!tail||!head)errors.push('Missing clicked asset handoff');
+  else for(const k of ['x','y','width','height','viewBox','data-media','data-clicked-asset'])if(tail.getAttribute(k)!==head.getAttribute(k))errors.push('Asset handoff discontinuity '+k);
+  const linked=[...original('collage',17).querySelectorAll('[data-related-asset]')];
+  if(linked.length!==source.bundle.related.length||linked.some(n=>n.dataset.relatedAsset!==source.bundle.assetId))errors.push('Unrelated bundle content');
+  if(source.bundle.media.cornerRadius&&Number(head.querySelector('clipPath rect')?.getAttribute('rx'))!==source.bundle.media.cornerRadius)errors.push('Asset outline lost');
+ }
+ for(const id of ['focus','focus2','focus3']){
+  const a=original(id,0).querySelector('[data-background-motion]'),b=original(id,12).querySelector('[data-background-motion]');
+  if(!a||!b||a.getAttribute('x')===b.getAttribute('x'))errors.push('Static feature background '+id);
+ }
+ const glyphs=f=>[...original('ending',f).querySelectorAll('[data-symbol]')].map(n=>n.dataset.symbol).join(',');
+ if(glyphs(0)!==glyphs(1)||glyphs(0)===glyphs(2)||glyphs(2)===glyphs(3)||glyphs(3)!==glyphs(4))errors.push('Wrong held glyph cadence');
+
  for(const mode of ['default','minimum','maximum','mixed']){
   const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,shots:{}};
   for(const [i,id]of MOTION_SHOTS.entries())adjusted.showcase.motion.shots[id]=mode==='default'?{}:Object.fromEntries(controlsFor(id).map(key=>[key,MOTION_FIELDS[key][mode==='minimum'?'min':mode==='maximum'?'max':i%2?'min':'max']]));
@@ -50,6 +66,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>
