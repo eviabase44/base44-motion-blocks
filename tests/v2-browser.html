@@ -30,7 +30,7 @@ document.querySelector('#run').onclick=async()=>{try{
    const media=tile.querySelector('[data-capability-role]'),grips=[...tile.querySelectorAll('[data-connector-for]')];
    if(!media||grips.length!==4){errors.push('Disconnected capability grips');continue;}
    const x=Number(media.getAttribute('x')),y=Number(media.getAttribute('y')),w=Number(media.getAttribute('width')),h=Number(media.getAttribute('height'));
-   const corners=[[x-5,y-5],[x+w-5,y-5],[x-5,y+h-5],[x+w-5,y+h-5]];
+   const corners=[[x-10,y-10],[x+w,y-10],[x-10,y+h],[x+w,y+h]];
    grips.forEach((g,j)=>{if(Math.abs(Number(g.getAttribute('x'))-corners[j][0])>.001||Math.abs(Number(g.getAttribute('y'))-corners[j][1])>.001||g.closest('[data-element-id]')!==tile)errors.push('Grip drifted from image');});
   }
   if(!svg.querySelector('[data-element-id="tile-0"]').getAttribute('transform').includes('12 -8'))errors.push('Connector group lost saved edits');
@@ -39,15 +39,15 @@ document.querySelector('#run').onclick=async()=>{try{
   const box=tile=>JSON.parse(tile.dataset.elementBox),near=(a,b)=>Math.abs(a-b)<.001;
   const columns=[0,1].map(c=>tiles.filter(tile=>Number(tile.dataset.elementId.split('-')[1])%2===c));
   for(const column of columns)for(const [i,tile] of column.entries()){
-   const a=box(tile);if(!near(a.width,195))errors.push('Tile width changed with source ratio');
-   if(a.x<5-.001||a.x+a.width>955+.001)errors.push('Column width clipped at canvas edge');
+   const a=box(tile);if(!near(a.width,190))errors.push('Tile width changed with source ratio');
+   if(a.x<10-.001||a.x+a.width>950+.001)errors.push('Column width clipped at canvas edge');
    if(i){
-    const previous=column[i-1],b=box(previous);if(!near(b.y+b.height,a.y)||!near(b.x,a.x))errors.push('Gap between stacked cards');
+    const previous=column[i-1],b=box(previous);if(!near(b.y+b.height+10,a.y)||!near(b.x,a.x))errors.push('Incorrect gutter between stacked cards');
     const lower=[...previous.querySelectorAll('[data-connector-for]')].slice(2),upper=[...tile.querySelectorAll('[data-connector-for]')].slice(0,2);
     lower.forEach((g,j)=>{if(!near(Number(g.getAttribute('x')),Number(upper[j].getAttribute('x')))||!near(Number(g.getAttribute('y')),Number(upper[j].getAttribute('y'))))errors.push('Stacked corner squares do not overlap');});
    }
   }
-  if(columns.every(c=>c.length)&&!near(box(columns[0][0]).x+195,box(columns[1][0]).x))errors.push('Gap between column edges');
+  if(columns.every(c=>c.length)&&!near(box(columns[0][0]).x+200,box(columns[1][0]).x))errors.push('Incorrect gutter between column edges');
   if(f<35){
    const next=renderShot('capabilities',f+1,clean,{wireframe:false});
    for(const tile of tiles){const a=box(tile),b=box(next.querySelector(`[data-element-id="${tile.dataset.elementId}"]`)),c=Number(tile.dataset.elementId.split('-')[1])%2;
@@ -109,6 +109,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Fixed widths, variable heights, overlapping stack corners, opposite scrolling and saved edits','Animated feature background type','Measured glyph-to-letter decode and centered logo hold','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Fixed widths, variable heights, matching gutters, shared corner squares, opposite scrolling and saved edits','Animated feature background type','Measured glyph-to-letter decode and centered logo hold','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>

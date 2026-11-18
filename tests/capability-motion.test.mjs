@@ -22,28 +22,32 @@ test('columns pull in opposite directions and preserve position across the cut',
  }
 });
 
-test('fixed-width tiles keep source ratios and share corner joints within each column',()=>{
+test('fixed-width tiles keep source ratios and gutters bridged by shared corner squares',()=>{
  const tiles=[{width:170,height:172},{width:228,height:128},{width:228,height:127},{width:230,height:296},{width:1672,height:944},{width:226,height:102}];
  const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
  for(const movement of [0,1,1.5])for(let frame=0;frame<36;frame++){
-  const baseX=frame<18?620:10,boxes=capabilityLayout(tiles,frame,baseX,movement);
+  const baseX=frame<18?555:10,boxes=capabilityLayout(tiles,frame,baseX,movement);
   boxes.forEach((b,i)=>{
-   near(b.width,195);near(b.x,baseX+(i%2)*195);
+   near(b.width,190);near(b.x,baseX+(i%2)*200);
    near(b.width/b.height,tiles[i].width/tiles[i].height);
    if(i>=2){
-    const previous=boxes[i-2];near(previous.y+previous.height,b.y);
+    const previous=boxes[i-2];near(previous.y+previous.height+10,b.y);
     const lower=connectorBoxes(previous).slice(2),upper=connectorBoxes(b).slice(0,2);
     lower.forEach((g,j)=>{near(g.x,upper[j].x);near(g.y,upper[j].y);});
    }
   });
+  near(boxes[1].x-(boxes[0].x+boxes[0].width),10);
+  const grips=connectorBoxes(boxes[0]);
+  near(grips[0].x+grips[0].width,boxes[0].x);near(grips[0].y+grips[0].height,boxes[0].y);
+  near(grips[3].x,boxes[0].x+boxes[0].width);near(grips[3].y,boxes[0].y+boxes[0].height);
   assert.notEqual(boxes[0].height,boxes[1].height);
  }
  // Missing media leaves no vertical hole and keeps surviving tile IDs/columns.
  tiles[2]=undefined;const boxes=capabilityLayout(tiles,0,10);
- near(boxes[4].y,boxes[0].y+boxes[0].height);near(boxes[3].y,boxes[1].y+boxes[1].height);assert.equal(boxes[2],null);
+ near(boxes[4].y,boxes[0].y+boxes[0].height+10);near(boxes[3].y,boxes[1].y+boxes[1].height+10);assert.equal(boxes[2],null);
  const a=capabilityLayout(tiles,0,10),b=capabilityLayout(tiles,35,10);
  a.forEach((box,i)=>{if(box)near(b[i].y-box.y,i%2?64:-64);});
  // A cropped feature uses the selected region's aspect ratio, not the page's.
  const region={x:40,y:30,width:120,height:300};
- const crop=capabilityLayout([{width:1200,height:800,region}],0,10)[0];near(crop.height,487.5);
+ const crop=capabilityLayout([{width:1200,height:800,region}],0,10)[0];near(crop.height,475);
 });

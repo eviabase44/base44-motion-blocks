@@ -19,20 +19,21 @@ export function capabilityOffset(frame,column,movement=1){
   return (column%2?1:-1)*(half+pull-1)*32*movement;
 }
 
-// Fixed-width stacks preserve each source's aspect ratio. Tiles meet edge to
-// edge within their own column; the two columns share the center seam but
-// travel in opposite directions. Keep source indices stable for saved edits.
+// Fixed-width stacks preserve each source's aspect ratio. Ten-unit gutters
+// separate the images horizontally and vertically, matching the corner-square
+// size. Keep source indices stable for saved edits and opposing column motion.
 export function capabilityLayout(tiles,frame,baseX,movement=1){
-  const width=195,bottom=[17+capabilityOffset(frame,0,movement),17+capabilityOffset(frame,1,movement)];
+  const width=190,gap=10,bottom=[17+capabilityOffset(frame,0,movement),17+capabilityOffset(frame,1,movement)];
   return tiles.map((media,i)=>{
     if(!media)return null;
-    const column=i%2,r=sourceRegion(media),box={x:baseX+column*width,y:bottom[column],width,height:width*r.height/r.width};
-    bottom[column]+=box.height;return box;
+    const column=i%2,r=sourceRegion(media),box={x:baseX+column*(width+gap),y:bottom[column],width,height:width*r.height/r.width};
+    bottom[column]+=box.height+gap;return box;
   });
 }
 
 export function connectorBoxes(box,size=10){
-  // The lower pair overlaps the next tile's upper pair within each column.
-  return [[box.x,box.y],[box.x+box.width,box.y],[box.x,box.y+box.height],[box.x+box.width,box.y+box.height]]
-    .map(([x,y])=>({x:x-size/2,y:y-size/2,width:size,height:size}));
+  // Squares sit outside the images, in the gutters. A lower pair coincides
+  // with the next tile's upper pair, leaving one joint instead of two squares.
+  return [[box.x-size,box.y-size],[box.x+box.width,box.y-size],[box.x-size,box.y+box.height],[box.x+box.width,box.y+box.height]]
+    .map(([x,y])=>({x,y,width:size,height:size}));
 }
