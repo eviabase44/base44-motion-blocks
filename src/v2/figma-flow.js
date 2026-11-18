@@ -8,7 +8,7 @@ import {sourceRegion,fitRect,BEATS} from './model.js';
 import {imageRegion} from './render.js';
 import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
-import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox} from './asset-bundle.js';
+import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox,bundleVisuals,bundlePose,BUNDLE_SLOTS} from './asset-bundle.js';
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 // Sampled at 12 fps from a 24 fps score. No wall-clock or random state.
@@ -90,8 +90,8 @@ function feature(plan,id,frame,o){
   n.push(layer('number-box','Number block',rect(screen.box.x+screen.box.width,screen.box.y-36,36,36,p.theme.ink)),layer('number','Feature number',text(String(i+1).padStart(2,'0'),screen.box.x+screen.box.width+18,screen.box.y-25.4,14.294,p,{fill:p.theme.onPrimary,anchor:'middle'})));
   return n;
 }
-// Fixed Figma composition; source-derived independent paths are retargeted to
-// these destinations. The central hovered feature stays the visual anchor.
+// Original destinations retained for the archived smooth experiment.
+// The active bundle uses the four readable BUNDLE_SLOTS in asset-bundle.js.
 const BUNDLE=[{x:371,y:161,width:218,height:218},{x:198,y:126,width:89,height:89},{x:652,y:410,width:89,height:89},{x:690,y:121,width:211,height:221},{x:137,y:-147,width:211,height:221},{x:-86,y:384,width:211,height:221},{x:125,y:295,width:89,height:89},{x:308,y:505,width:89,height:89},{x:641,y:74,width:47,height:47}];
 function imagery(plan){return plan.source.images??[];}
 function component(f){
@@ -101,24 +101,16 @@ function component(f){
   if(r.width/r.height>3&&f.page)return {...f.page,label:f.name};
   return {...f.media,label:f.name,region:r};
 }
-function bundleDetail(item,b,p){
-  const w=210,h=210*b.height/b.width,inset=18,value=wrap(item.detail.value,p,29,w-inset*2,6,12),label=wrap(item.detail.label.toUpperCase(),p,10,w-inset*2,2,8),top=Math.max(50,(h-value.rows.length*value.size)/2);
-  return group([rect(0,0,w,h,p.theme.surface),...label.rows.map((r,j)=>text(r,inset,inset+j*label.size,label.size,p,{opacity:.65})),...value.rows.map((r,j)=>text(r,inset,top+j*value.size,value.size,p))],{transform:`translate(${b.x} ${b.y}) scale(${b.width/w})`});
-}
 function bundle(plan,frame,o){
   const p=plan.source,bundle=assetBundle(plan),n=[layer('background','Background',rect(0,0,960,540,p.theme.accent)),layer('watermark-0','Watermark 1',text(p.app.name,-598,3,230,p,{opacity:.04})),layer('watermark-1','Watermark 2',text(p.app.name,198,370,230,p,{opacity:.04}))];
-  // Each related item is explicitly attached to this product/asset ID. Never
-  // substitute other features or random app-library images to fill the layout.
-  const slots=[3,1,4,2,5,6,7,8];
-  bundle.related.forEach((item,k)=>{
-    const i=slots[k],track=CARD_TRACKS[`card${i+1}`].samples,j=Math.min(25,Math.round(frame*25/11)),pose=track[j],home=track[25];if(!pose)return;
-    const s=Math.max(0,1+(pose[2]/home[2]-1)*o.motion.movement),base=BUNDLE[i],b={x:base.x+(pose[0]-home[0])*.7*o.motion.movement,y:base.y+(pose[1]-home[1])*.7*o.motion.movement,width:base.width*s,height:base.height*s};
-    if(!s)return;
-    // Edge-cropped artwork follows the Figma field. A factual detail must stay
-    // readable as a complete tile, including its value below the label.
-    if(item.detail){b.x=Math.max(20,Math.min(940-b.width,b.x));b.y=Math.max(20,Math.min(520-b.height,b.y));}
-    const m=item.media?media({...item.media,label:item.label},p,o.wireframe,i):null,r=m?sourceRegion(m):null,box=m?fitRect(r,b):b;
-    const node=m?imageRegion(m,r,b,{'data-related-asset':item.assetId}):group([bundleDetail(item,b,p)],{'data-related-asset':item.assetId});
+  // Host-selected feature fragments or contextual imagery; never fill gaps
+  // with disconnected facts, tiny cutouts or arbitrary gallery neighbours.
+  bundleVisuals(bundle).forEach((item,k)=>{
+    const base=BUNDLE_SLOTS[k],i=base.id,track=CARD_TRACKS[`card${i+1}`].samples,j=Math.min(25,Math.round(frame*25/11)),pose=track[j],home=track[25];if(!pose)return;
+    const b=bundlePose(base,pose,home,o.motion.movement);
+    if(!b.width)return;
+    const m=media({...item.media,label:item.label},p,o.wireframe,i),r=sourceRegion(m),box=fitRect(r,b);
+    const node=imageRegion(m,r,b,{'data-bundle-item':item.id,'data-bundle-role':item.role??(item.featureId?'feature':'mood'),'data-related-asset':item.assetId,'data-related-feature':item.featureId});
     n.push(layer(`card-${i}`,item.label,node,box));
   });
   const m=media({...bundle.media,label:bundle.label},p,o.wireframe),b=assetHome(m);

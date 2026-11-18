@@ -126,26 +126,29 @@
       {
         "id": "artwork",
         "assetId": "example-item",
-        "label": "Example item artwork",
+        "label": "Contextual app artwork",
+        "role": "mood",
         "media": {
-          "src": "/assets/v2/wireframe-1.svg",
+          "src": "/assets/v2/wireframe-3.svg",
+          "width": 1280,
+          "height": 900
+        }
+      },
+      {
+        "id": "feature-fragment",
+        "featureId": "feature-2",
+        "label": "Whole feature component",
+        "role": "feature",
+        "media": {
+          "src": "/assets/v2/wireframe-2.svg",
           "width": 1280,
           "height": 900,
           "region": {
             "x": 40,
             "y": 170,
             "width": 1200,
-            "height": 220
+            "height": 700
           }
-        }
-      },
-      {
-        "id": "detail",
-        "assetId": "example-item",
-        "label": "Example item detail",
-        "detail": {
-          "label": "Related detail",
-          "value": "Your item"
         }
       }
     ]

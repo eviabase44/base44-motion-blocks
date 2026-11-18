@@ -12,7 +12,7 @@ The 2026-11-15 Figma revision is the current default. It keeps the approved tota
 | --- | --- | --- |
 | 0–3s | Opening | Centered app description, cursor click, expanding app window. |
 | 3–6.5s | Homepage scroll | Same window; deeper bounded page movement, click and asset isolation. |
-| 6.5–8s | Feature bundle | The clicked asset and only its related content, on measured card paths. |
+| 6.5–8s | Feature bundle | The clicked asset, meaningful app-feature fragments and contextual imagery on measured card paths. |
 | 8–10s | Feature 1 | First selected page, title and numbered corner. |
 | 10–12s | Feature 2 | Second selected page, title and numbered corner. |
 | 12–14s | Feature 3 | Third selected page, title and numbered corner. |

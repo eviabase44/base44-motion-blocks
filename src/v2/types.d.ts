@@ -5,7 +5,10 @@ export interface ShotMotion {softness?:number;tempo?:number;movement?:number;joi
 export interface MotionSettings {version:1;style?:'original'|'refined';cadence?:12|24|60;shots:Partial<Record<MotionShotId,ShotMotion>>;elements?:Partial<Record<MotionShotId,Record<string,ElementAdjustment>>>}
 export interface Region {x:number;y:number;width:number;height:number}
 export interface ObservedMedia {src:string;width:number;height:number;region?:Region;hover?:Region;cornerRadius?:number;label?:string}
-export type RelatedAssetItem = {id:string;assetId:string;label:string} & (
+export type RelatedAssetItem = {id:string;label:string;role?:'feature'|'mood'} & (
+  {assetId:string;featureId?:string} | {featureId:string;assetId?:string}
+) & (
+  /** Legacy details remain importable but are not rendered as floating tiles. */
   {media:ObservedMedia;detail?:never} | {detail:{label:string;value:string};media?:never}
 );
 export interface AssetBundle {
@@ -14,7 +17,8 @@ export interface AssetBundle {
   anchor:Region;
   /** Same item, with its full silhouette, source aspect and optional measured radius. */
   media:ObservedMedia;
-  /** Only observations attached to assetId, up to eight. No global-gallery fallback. */
+  /** Up to eight contextual candidates; four distinct, usable visuals are shown.
+   * Each references this assetId or an available app featureId. No gallery fallback. */
   related:RelatedAssetItem[];
 }
 export interface FeatureObservation {

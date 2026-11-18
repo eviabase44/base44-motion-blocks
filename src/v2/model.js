@@ -48,7 +48,10 @@ export function validateSource(input){
     for(const item of b.related){
       requireText(item.id,'Related item ID',80);requireText(item.label,'Related item label',80);
       if(relatedIds.has(item.id))throw Error('Related item IDs must be unique.');relatedIds.add(item.id);
-      if(item.assetId!==b.assetId)throw Error('Every bundle item must belong to the clicked asset.');
+      if(item.assetId!==undefined&&item.assetId!==b.assetId)throw Error('Bundle asset association must match the clicked asset.');
+      if(item.featureId!==undefined&&(!Array.isArray(p.features)||!p.features.some(f=>f.id===item.featureId&&f.available!==false)))throw Error('Bundle feature association must reference an available app feature.');
+      if(item.assetId===undefined&&item.featureId===undefined)throw Error('Every bundle item needs an asset or app-feature association.');
+      if(item.role!==undefined&&!['feature','mood'].includes(item.role))throw Error('Bundle visuals must be feature fragments or contextual mood imagery.');
       if(Boolean(item.media)===Boolean(item.detail))throw Error('A related item needs either media or a detail.');
       if(item.media)media(item.media,item.label);
       if(item.detail){requireText(item.detail.label,'Detail label',40);requireText(item.detail.value,'Detail value',70);}

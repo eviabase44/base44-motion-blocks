@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {planSequence,sourceRegion,validateSource} from '../src/v2/model.js';
-import {assetBundle,assetHome,assetScrollProgress,anchorOnPage} from '../src/v2/asset-bundle.js';
+import {assetBundle,assetHome,assetScrollProgress,anchorOnPage,bundleVisuals,bundlePose,BUNDLE_SLOTS} from '../src/v2/asset-bundle.js';
+import {CARD_TRACKS} from '../src/data/collage.js';
 import {homepagePose,pageRegion} from '../src/v2/figma-flow.js';
 import {MOTION_DEFAULTS,motionFrame} from '../src/v2/motion-settings.js';
 import {payloadFromShowcase} from '../src/showcase.js';
@@ -11,8 +12,32 @@ const fixture=JSON.parse(await readFile(new URL('../examples/v2-wireframe.json',
 const fresh=()=>structuredClone(fixture);
 test('bundle accepts only associated assets, valid outlines and source bounds',()=>{
  assert.doesNotThrow(()=>validateSource(fresh()));
- for(const mutate of [p=>p.bundle.related[0].assetId='unrelated',p=>p.bundle.related[0].media.src='javascript:alert(1)',p=>p.bundle.media.cornerRadius=999,p=>p.bundle.media.cornerRadius=-1,p=>p.bundle.anchor.y=99999,p=>p.bundle.related[1].id=p.bundle.related[0].id,p=>p.bundle.related[1].media=p.bundle.media]){
+ for(const mutate of [p=>p.bundle.related[0].assetId='unrelated',p=>p.bundle.related[0].media.src='javascript:alert(1)',p=>p.bundle.media.cornerRadius=999,p=>p.bundle.media.cornerRadius=-1,p=>p.bundle.anchor.y=99999,p=>p.bundle.related[1].id=p.bundle.related[0].id,p=>p.bundle.related[1].detail={label:'Extra',value:'Conflicting content'},p=>p.bundle.related[1].featureId='missing',p=>p.features[1].available=false,p=>p.bundle.related[1].role='logo',p=>delete p.bundle.related[1].featureId]){
   const p=fresh();mutate(p);assert.throws(()=>validateSource(p));
+ }
+});
+test('bundle omits fact tiles, tiny crops, logo strips and repeated visuals',()=>{
+ const b=fresh().bundle,valid=b.related[0],copy=(id,region)=>({...valid,id,media:{...valid.media,region}});
+ b.related=[{id:'fact',assetId:b.assetId,label:'Location',detail:{label:'Location',value:'Somewhere'}},copy('face',{x:0,y:0,width:82,height:109}),copy('logo',{x:0,y:0,width:250,height:44}),copy('strip',{x:0,y:0,width:1100,height:140}),{...valid,id:'center',media:b.media},valid,{...valid,id:'repeat'}];
+ assert.deepEqual(bundleVisuals(b).map(x=>x.id),[valid.id]);
+ b.related=Array.from({length:8},(_,i)=>copy(String(i),{x:i*20,y:0,width:400,height:400}));
+ assert.equal(bundleVisuals(b).length,4);
+});
+test('settled satellite slots remain whole, separated and clear of the clicked asset',()=>{
+ for(const shape of [[230,297],[900,300],[400,400]]){
+  const center=assetHome({width:shape[0],height:shape[1]}),overlap=(a,b)=>a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height;
+  BUNDLE_SLOTS.forEach((b,i)=>{assert.ok(b.x>=20&&b.y>=20&&b.x+b.width<=940&&b.y+b.height<=520);assert.ok(!overlap(center,b));for(const a of BUNDLE_SLOTS.slice(0,i))assert.ok(!overlap(a,b));});
+ }
+});
+test('larger bundle panels stay in frame throughout the measured entrance',()=>{
+ for(const base of BUNDLE_SLOTS){
+  const track=CARD_TRACKS[`card${base.id+1}`].samples,home=track[25];
+  for(const movement of [0,1,2])for(const pose of track.filter(Boolean)){
+   const b=bundlePose(base,pose,home,movement);
+   assert.ok(b.x>=20&&b.y>=20&&b.x+b.width<=940.001&&b.y+b.height<=520.001);
+   if(b.width)assert.ok(Math.abs(b.width/b.height-base.width/base.height)<1e-10);
+  }
+  const {id,...box}=base;assert.deepEqual(bundlePose(base,home,home,1),box);
  }
 });
 test('legacy sources never fill a bundle from unrelated global imagery',()=>{

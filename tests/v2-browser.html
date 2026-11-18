@@ -3,6 +3,7 @@ import {payloadFromShowcase,SHOWCASE_SHOTS} from '../src/showcase.js';
 import {renderShot,renderSequenceFrame,createMotionPlayer,loadAppFont,FPS,SHOTS} from '../src/player.js';
 import {CUT_TYPES,MOTION_SHOTS,MOTION_FIELDS,controlsFor} from '../src/v2/motion-settings.js';
 import {SHOT_VARIANTS} from '../src/variants.js';
+import {bundleVisuals} from '../src/v2/asset-bundle.js';
 const result=document.querySelector('#result'),fixture=document.querySelector('#fixture');
 document.querySelector('#run').onclick=async()=>{try{
  result.textContent='Running…';const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),errors=[];p.showcase.motion={version:1,style:'original',shots:{}};await loadAppFont(p);let frames=0;
@@ -22,8 +23,9 @@ document.querySelector('#run').onclick=async()=>{try{
  if(source.bundle){
   if(!tail||!head)errors.push('Missing clicked asset handoff');
   else for(const k of ['x','y','width','height','viewBox','data-media','data-clicked-asset'])if(tail.getAttribute(k)!==head.getAttribute(k))errors.push('Asset handoff discontinuity '+k);
-  const linked=[...original('collage',17).querySelectorAll('[data-related-asset]')];
-  if(linked.length!==source.bundle.related.length||linked.some(n=>n.dataset.relatedAsset!==source.bundle.assetId))errors.push('Unrelated bundle content');
+  const linked=[...original('collage',17).querySelectorAll('[data-bundle-item]')];
+  if(linked.length!==bundleVisuals(source.bundle).length||linked.some(n=>n.dataset.relatedAsset!==source.bundle.assetId&&!source.features.some(f=>f.id===n.dataset.relatedFeature&&f.available!==false)))errors.push('Unrelated bundle content');
+  for(const n of linked){const box=JSON.parse(n.closest('[data-element-id]').dataset.elementBox);if(box.x<0||box.y<0||box.x+box.width>960||box.y+box.height>540)errors.push('Cropped bundle visual');if(!['feature','mood'].includes(n.dataset.bundleRole))errors.push('Nonvisual bundle filler');}
   if(source.bundle.media.cornerRadius&&Number(head.querySelector('clipPath rect')?.getAttribute('rx'))!==source.bundle.media.cornerRadius)errors.push('Asset outline lost');
  }
  for(const id of ['focus','focus2','focus3']){
