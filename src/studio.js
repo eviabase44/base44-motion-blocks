@@ -1,5 +1,6 @@
 import {connectElementEditor} from './v2/element-editor.js';
 import {connectMotionPanel,restoreSavedMotion} from './v2/motion-panel.js';
+import {capabilityCopy} from './v2/capability-motion.js';
 import {SHOWCASE_SHOTS,baseShot,payloadFromShowcase,syncShowcase,addShowcaseToPayload} from './showcase.js';
 import {DAZZED_FONT_URL} from './brand.js';
 import {createMotionPlayer,renderShot,SHOTS,FPS,TOTAL_FRAMES} from './player.js';
@@ -88,7 +89,11 @@ function contentFields(){const s=currentShot(selected);$('content-title').textCo
   const key={hook:'hook',reveal:'reveal',focus:'focus'}[selected];
   if(payload.showcase&&selected==='hook'){fields.append(inputField('App description',payload.showcase.description,value=>mutate(p=>{p.showcase.description=value;}),150));}
   else if(payload.showcase&&baseShot(selected)==='focus'){const i=selected==='focus2'?1:selected==='focus3'?2:0,f=syncShowcase(payload).selected[i];fields.append(inputField('Feature title',f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90));fields.append(html('p',{class:'media-note'},f.name+' · title and media stay paired by feature ID.'));}
-  else if(payload.showcase&&selected==='capabilities'){fields.append(inputField('Benefit',payload.showcase.benefit??'',value=>mutate(p=>{if(value.trim())p.showcase.benefit=value;else delete p.showcase.benefit;}),100));media.append(html('p',{class:'media-note'},`${payload.showcase.images?.length??0} app images, mixed with the selected features. Images remain separate from page captures.`));}
+  else if(payload.showcase&&selected==='capabilities'){
+    const plan=syncShowcase(payload);
+    for(const [i,key]of ['benefit','benefitFollowup'].entries())fields.append(inputField(`Screen ${i+1} headline`,capabilityCopy(plan,i===1),value=>mutate(p=>{if(value.trim())p.showcase[key]=value;else delete p.showcase[key];}),100));
+    media.append(html('p',{class:'media-note'},`${payload.showcase.images?.length??0} app images, mixed with the selected features. The black connectors move with each image. Movement amount controls vertical travel.`));
+  }
   else if(key&&!(payload.showcase&&selected==='reveal'&&variants.reveal==='original')){const grid=html('div',{class:'field-grid'}),labels=key==='hook'?['Intro','App type','Connector','Benefit','Subject','Outcome']:key==='reveal'?['Line 1 · A','Line 1 · B','Line 2 · A','Line 2 · B','Line 3']:['Top word','Middle · A','Middle · B','Bottom word'];payload.copy[key].forEach((v,i)=>grid.append(inputField(labels[i],v,value=>mutate(p=>{p.copy[key][i]=value;}),key==='focus'?12:key==='reveal'?20:22)));fields.append(grid);}
   if(payload.showcase&&selected==='collage'){syncShowcase(payload).selected.forEach(f=>fields.append(inputField(f.name,f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90)));media.append(html('p',{class:'media-note'},'The center card anchors the selected features and actual app images. All media retains its source proportions.'));}
   else if(selected==='collage')payload.cards.forEach((c,i)=>{fields.append(inputField(`Card ${String(i+1).padStart(2,'0')}`,c.title,value=>mutate(p=>{p.cards[i].title=value;}),34));media.append(mediaRow(c.media,i,(key,value)=>mutate(p=>{p.cards[i].media[key]=value;}),[3,4,6].includes(i)));});

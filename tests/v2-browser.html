@@ -4,6 +4,8 @@ import {renderShot,renderSequenceFrame,createMotionPlayer,loadAppFont,FPS,SHOTS}
 import {CUT_TYPES,MOTION_SHOTS,MOTION_FIELDS,controlsFor} from '../src/v2/motion-settings.js';
 import {SHOT_VARIANTS} from '../src/variants.js';
 import {bundleVisuals} from '../src/v2/asset-bundle.js';
+import {capabilityCopy} from '../src/v2/capability-motion.js';
+import {planSequence} from '../src/v2/model.js';
 const result=document.querySelector('#result'),fixture=document.querySelector('#fixture');
 document.querySelector('#run').onclick=async()=>{try{
  result.textContent='Running…';const r=await fetch('/api/v2/local-source'),source=r.ok?await r.json():await (await fetch('../examples/v2-wireframe.json')).json(),p=payloadFromShowcase(source),errors=[];p.showcase.motion={version:1,style:'original',shots:{}};await loadAppFont(p);let frames=0;
@@ -17,6 +19,22 @@ document.querySelector('#run').onclick=async()=>{try{
  const original=(id,f)=>renderShot(id,f,p,{wireframe:false});
  if(original('hook',21).querySelector('[data-app-page]')||!original('hook',22).querySelector('[data-app-page]'))errors.push('Original app opening changed');
  if(original('capabilities',17).querySelector('[data-benefit]').getAttribute('x')!=='112'||original('capabilities',18).querySelector('[data-benefit]').getAttribute('x')!=='480')errors.push('Original capability flip changed');
+ const benefitText=svg=>[...svg.querySelectorAll('[data-benefit]')].map(n=>n.textContent).join(' ');
+ for(const [f,second]of [[17,false],[18,true]])if(benefitText(original('capabilities',f))!==capabilityCopy(planSequence(source),second))errors.push('Wrong capability headline');
+ // Every grip is attached to the fitted image, not a fixed page-grid point.
+ // Parent edits must carry the connectors with the image in both motion modes.
+ for(const style of ['original','refined'])for(let f=0;f<36;f++){
+  const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,style,shots:{},elements:{capabilities:{'tile-0':{dx:12,dy:-8,sx:1.1,sy:1.1}}}};
+  const svg=renderShot('capabilities',f,adjusted,{wireframe:false});
+  for(const tile of svg.querySelectorAll('[data-element-id^="tile-"]')){
+   const media=tile.querySelector('[data-capability-role]'),grips=[...tile.querySelectorAll('[data-connector-for]')];
+   if(!media||grips.length!==4){errors.push('Disconnected capability grips');continue;}
+   const x=Number(media.getAttribute('x')),y=Number(media.getAttribute('y')),w=Number(media.getAttribute('width')),h=Number(media.getAttribute('height'));
+   const corners=[[x-10,y-10],[x+w,y-10],[x-10,y+h],[x+w,y+h]];
+   grips.forEach((g,j)=>{if(Math.abs(Number(g.getAttribute('x'))-corners[j][0])>.001||Math.abs(Number(g.getAttribute('y'))-corners[j][1])>.001||g.closest('[data-element-id]')!==tile)errors.push('Grip drifted from image');});
+  }
+  if(!svg.querySelector('[data-element-id="tile-0"]').getAttribute('transform').includes('12 -8'))errors.push('Connector group lost saved edits');
+ }
  if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
  // The asset identity and exact source viewport must survive the cut unchanged.
  const tail=original('reveal',41).querySelector('[data-clicked-asset]'),head=original('collage',0).querySelector('[data-clicked-asset]');
@@ -68,6 +86,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Attached connectors follow image geometry and saved edits','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>

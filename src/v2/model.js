@@ -36,6 +36,7 @@ export function validateSource(input){
   }
   media(p.homepage,'Homepage');
   if(p.benefit!==undefined)requireText(p.benefit,'Benefit',100);
+  if(p.benefitFollowup!==undefined)requireText(p.benefitFollowup,'Second capability headline',100);
   if(p.images!==undefined){if(!Array.isArray(p.images)||p.images.length>20)throw Error('Provide up to 20 app images.');p.images.forEach((m,i)=>media(m,`App image ${i+1}`));}
   if(p.homepage.windowHeight!==undefined&&!finite(p.homepage.windowHeight,80,(p.homepage.region?.height??p.homepage.height)))throw Error('Homepage windowHeight exceeds the available capture.');
   if(p.bundle!==undefined){

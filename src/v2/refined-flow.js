@@ -7,6 +7,7 @@ import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
 import {HOME,FEATURE,FOCUS_IDS,logo,symbols,surface,background,markers,media,wrap,component,imagery,BUNDLE,FIGMA_NODES,pageRegion} from './figma-flow.js';
 import {clamp,lerp,phase,smoother,arrive,pulse,curvePoint} from './refined-motion.js';
+import {capabilityCopy,capabilityOffset,connectorBoxes} from './capability-motion.js';
 
 function pose(nodes,{x=0,y=0,opacity=1,scale=1,cx=0,cy=0}={}){return group(Array.isArray(nodes)?nodes:[nodes],{opacity,transform:`translate(${x} ${y}) translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`});}
 // A local viewport masks the baseline while each word travels independently.
@@ -85,16 +86,14 @@ function capabilities(plan,f,o){
   for(const [i,[x,y]]of [[-280,-75],[-63,159],[-701,408],[617,408]].entries())n.push(layer(`watermark-${i}`,`Watermark ${i+1}`,text('Capabilities',x,y,230,p,{opacity:.04})));
   // Crisp editorial exchange of the two supplied layouts, with lead and follow.
   // Unlike a cross-screen morph, the UI and headline never cross one another.
-  const enter=arrive(local,0,4.8,m.softness),lead=!left?phase(f,16,2):0,copyX=left?480:112;
-  const copy=wrap(p.benefit??`Now you can ${plan.selected[0].title.replace(/[.!?]+$/,'').replace(/^./,c=>c.toLowerCase())}.`,p,64.719,433,3);
+  const lead=!left?phase(f,16,2):0,copyX=left?480:112;
+  const copy=wrap(capabilityCopy(plan,left),p,64.719,433,3);
   copy.rows.forEach((r,i)=>{const a=arrive(local,i*.65,4.6,m.softness);n.push(layer(`benefit-${i}`,`Benefit line ${i+1}`,pose(text(r,copyX,243+i*57.785,copy.size,p,{'data-benefit':true}),{y:(1-a)*13*m.movement-lead*4,opacity:.85+.15*a})));});
   const pictures=imagery(plan),tiles=[component(plan.selected[0]),pictures[0],pictures[1],component(plan.selected[1]),component(plan.selected[2]),pictures[2]],baseX=left?10:620;
-  const drift=-14*smoother(phase(local,0,17))*m.movement;
-  for(let i=0;i<6;i++){if(!tiles[i])continue;const a=arrive(local,i*.35,6,m.softness),b={x:baseX+i%2*203+(left?-1:1)*(1-a)*16*m.movement,y:17+Math.floor(i/2)*214+drift+(1-a)*12*m.movement,width:195,height:204},item=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i);
-    n.push(layer(`tile-${i}`,`Tile ${i+1} · ${item.label}`,imageRegion(item,sourceRegion(item),b,{'data-capability-role':[1,2,5].includes(i)?'app-image':'feature'}),fitRect(sourceRegion(item),b)));
+  for(let i=0;i<6;i++){if(!tiles[i])continue;const a=arrive(local,i*.35,6,m.softness),b={x:baseX+i%2*203+(left?-1:1)*(1-a)*16*m.movement,y:17+Math.floor(i/2)*214+capabilityOffset(f,i%2,m.movement)+(1-a)*12*m.movement,width:195,height:204},item=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i),fit=fitRect(sourceRegion(item),b);
+    const grips=connectorBoxes(fit).map((g,j)=>rect(g.x,g.y,g.width,g.height,p.theme.ink,{'data-connector-for':`tile-${i}`,'data-connector-corner':j}));
+    n.push(layer(`tile-${i}`,`Tile ${i+1} · ${item.label}`,[imageRegion(item,sourceRegion(item),b,{'data-capability-role':[1,2,5].includes(i)?'app-image':'feature'}),...grips],fit));
   }
-  let mark=0;for(const xx of left?[0,203,408]:[80,610,813])for(const yy of [221,435])n.push(layer(`corner-${mark++}`,`Grid marker ${mark}`,pose(rect(xx,yy,10,10,p.theme.ink),{opacity:enter})));
-  for(const xx of left?[0,203]:[610,813])n.push(layer(`corner-${mark++}`,`Grid marker ${mark}`,pose(rect(xx,7,10,10,p.theme.ink),{opacity:enter})));
   return n;
 }
 function ending(plan,f,o){

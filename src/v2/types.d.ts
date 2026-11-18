@@ -30,7 +30,7 @@ export interface ShowcaseSource {
   version:2;signalMode:'simulated'|'provided';
   app:{name:string;kind?:'app'|'agent'|'website'|'tool'};
   description:string;
-  benefit?:string;images?:ObservedMedia[];bundle?:AssetBundle;motion?:MotionSettings;
+  benefit?:string;benefitFollowup?:string;images?:ObservedMedia[];bundle?:AssetBundle;motion?:MotionSettings;
   copy?:{hook?:[string,string,string,string,string,string];reveal?:[string,string,string,string,string];focus?:[string,string,string,string];category?:string;detail?:string};
   theme:{primary:string;accent:string;surface:string;ink:string;onPrimary:string;blocks?:string[]};
   typography:{family:string;src?:string|null;headlineWeight:number;bodyWeight:number;wordmarkWeight:number;letterSpacingEm?:number};

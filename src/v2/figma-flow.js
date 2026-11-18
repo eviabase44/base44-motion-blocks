@@ -3,12 +3,12 @@
 // Present Flow/SH22 paths, source-indexed pop/hold cadence and B44-06's glyph row.
 import {el,rect,text,group,width,cursor} from '../svg.js';
 import {CARD_TRACKS} from '../data/collage.js';
-import {REFERENCE_TRACKS} from '../data/reference-tracks.js';
 import {sourceRegion,fitRect,BEATS} from './model.js';
 import {imageRegion} from './render.js';
 import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
 import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox,bundleVisuals,bundlePose,BUNDLE_SLOTS} from './asset-bundle.js';
+import {capabilityCopy,capabilityOffset,connectorBoxes} from './capability-motion.js';
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 // Sampled at 12 fps from a 24 fps score. No wall-clock or random state.
@@ -119,15 +119,20 @@ function bundle(plan,frame,o){
   return n;
 }
 function capabilities(plan,frame,o){
-  const p=plan.source,left=frame>=18,local=left?frame-18:frame,n=[layer('background','Background',rect(0,0,960,540,surface(p)))];
+  const p=plan.source,left=frame>=18,n=[layer('background','Background',rect(0,0,960,540,surface(p)))];
   for(const [i,[x,y]]of [[-280,-75],[-63,159],[-701,408],[617,408]].entries())n.push(layer(`watermark-${i}`,`Watermark ${i+1}`,text('Capabilities',x,y,230,p,{opacity:.04})));
-  const copy=wrap(p.benefit??`Now you can ${plan.selected[0].title.replace(/[.!?]+$/,'').replace(/^./,c=>c.toLowerCase())}.`,p,64.719,433,3),x=left?480:112;
+  const copy=wrap(capabilityCopy(plan,left),p,64.719,433,3),x=left?480:112;
   copy.rows.forEach((r,i)=>n.push(layer(`benefit-${i}`,`Benefit line ${i+1}`,text(r,x,243+i*57.785,copy.size,p,{'data-benefit':true}))));
   const photos=imagery(plan),tiles=[component(plan.selected[0]),photos[0],photos[1],component(plan.selected[1]),component(plan.selected[2]),photos[2]],baseX=left?10:620;
-  const track=REFERENCE_TRACKS['collage-file-strip'].translation,drift=track[Math.min(track.length-1,Math.floor(local*2))][0]*.12*o.motion.movement;
-  for(let i=0;i<6;i++){if(!tiles[i])continue;const x=baseX+i%2*203,y=17+Math.floor(i/2)*214+drift,b={x,y,width:195,height:204},m=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i);n.push(layer(`tile-${i}`,`Tile ${i+1} · ${m.label}`,imageRegion(m,sourceRegion(m),b,{'data-capability-role':[1,2,5].includes(i)?'app-image':'feature'}),fitRect(sourceRegion(m),b)));}
-  let mark=0;for(const xx of left?[0,203,408]:[80,610,813])for(const yy of [221,435])n.push(layer(`corner-${mark++}`,`Grid marker ${mark}`,rect(xx,yy,10,10,p.theme.ink)));
-  for(const xx of left?[0,203]:[610,813])n.push(layer(`corner-${mark++}`,`Grid marker ${mark}`,rect(xx,7,10,10,p.theme.ink)));
+  for(let i=0;i<6;i++){
+    if(!tiles[i])continue;
+    const x=baseX+i%2*203,y=17+Math.floor(i/2)*214+capabilityOffset(frame,i%2,o.motion.movement),b={x,y,width:195,height:204};
+    const m=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i),fit=fitRect(sourceRegion(m),b);
+    // The image and its four grips are one editable layer. Dragging/resizing a
+    // grip therefore adjusts the image, and saved tweaks keep them connected.
+    const grips=connectorBoxes(fit).map((g,j)=>rect(g.x,g.y,g.width,g.height,p.theme.ink,{'data-connector-for':`tile-${i}`,'data-connector-corner':j}));
+    n.push(layer(`tile-${i}`,`Tile ${i+1} · ${m.label}`,[imageRegion(m,sourceRegion(m),b,{'data-capability-role':[1,2,5].includes(i)?'app-image':'feature'}),...grips],fit));
+  }
   return n;
 }
 function ending(plan,frame,o){
