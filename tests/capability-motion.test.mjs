@@ -51,3 +51,18 @@ test('fixed-width tiles keep source ratios and gutters bridged by shared corner 
  const region={x:40,y:30,width:120,height:300};
  const crop=capabilityLayout([{width:1200,height:800,region}],0,10)[0];near(crop.height,475);
 });
+
+test('portrait originals stay whole and each tile scrolls fully into view',()=>{
+ const tiles=[{width:170,height:172},{width:3024,height:4032},{width:900,height:495},{width:230,height:296},{width:1672,height:944},{width:1080,height:1350}];
+ const frames=Array.from({length:36},(_,f)=>capabilityLayout(tiles,f,f<18?555:10));
+ tiles.forEach((media,i)=>{
+  for(const boxes of frames)assert.ok(Math.abs(boxes[i].height-190*media.height/media.width)<1e-8);
+  assert.ok(frames.some(boxes=>boxes[i].y>=10-1e-8&&boxes[i].y+boxes[i].height<=530+1e-8),`tile ${i} never fits fully in the viewport`);
+  assert.equal(frames[17][i].y,frames[18][i].y);
+  frames.slice(1).forEach((boxes,f)=>assert.ok(i%2?boxes[i].y>=frames[f][i].y:boxes[i].y<=frames[f][i].y));
+ });
+ assert.ok(frames[35][1].y-frames[0][1].y>64,'tall column must travel further than the short reference strip');
+ assert.equal(frames[0][5].height,237.5,'portrait artwork must not inherit the wide thumbnail crop');
+ const still=capabilityLayout(tiles,0,10,0);
+ assert.deepEqual(still,capabilityLayout(tiles,35,10,0));
+});

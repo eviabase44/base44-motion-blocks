@@ -23,10 +23,22 @@ export function capabilityOffset(frame,column,movement=1){
 // separate the images horizontally and vertically, matching the corner-square
 // size. Keep source indices stable for saved edits and opposing column motion.
 export function capabilityLayout(tiles,frame,baseX,movement=1){
-  const width=190,gap=10,bottom=[17+capabilityOffset(frame,0,movement),17+capabilityOffset(frame,1,movement)];
+  const width=190,gap=10,heights=tiles.map(media=>{
+    if(!media)return null;
+    const r=sourceRegion(media);return width*r.height/r.width;
+  });
+  const totals=[0,0],counts=[0,0];
+  heights.forEach((height,i)=>{if(height!==null){totals[i%2]+=height;counts[i%2]++;}});
+  const bottom=totals.map((height,column)=>{
+    height+=Math.max(0,counts[column]-1)*gap;
+    // Tall original artwork needs enough travel to bring both ends of its
+    // column into view. Keep the reference easing and opposite directions.
+    const travel=Math.max(64,height-520);
+    return (540-height)/2+capabilityOffset(frame,column,movement)*travel/64;
+  });
   return tiles.map((media,i)=>{
     if(!media)return null;
-    const column=i%2,r=sourceRegion(media),box={x:baseX+column*(width+gap),y:bottom[column],width,height:width*r.height/r.width};
+    const column=i%2,box={x:baseX+column*(width+gap),y:bottom[column],width,height:heights[i]};
     bottom[column]+=box.height+gap;return box;
   });
 }
