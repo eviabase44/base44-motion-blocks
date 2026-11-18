@@ -1,4 +1,5 @@
 import {REFERENCE_TRACKS} from '../data/reference-tracks.js';
+import {sourceRegion} from './model.js';
 
 export function capabilityCopy(plan,second=false){
   const p=plan.source;
@@ -18,7 +19,20 @@ export function capabilityOffset(frame,column,movement=1){
   return (column%2?1:-1)*(half+pull-1)*32*movement;
 }
 
+// Pack the actual image shapes, not fixed-height slots. Adjacent columns
+// share an edge; each image begins exactly where the previous one ends.
+export function capabilityLayout(tiles,frame,baseX,movement=1){
+  const width=195,bottom=[17+capabilityOffset(frame,0,movement),17+capabilityOffset(frame,1,movement)];
+  return tiles.map((media,i)=>{
+    if(!media)return null;
+    const column=i%2,r=sourceRegion(media),box={x:baseX+column*width,y:bottom[column],width,height:width*r.height/r.width};
+    bottom[column]+=box.height;return box;
+  });
+}
+
 export function connectorBoxes(box,size=10){
-  return [[box.x-size,box.y-size],[box.x+box.width,box.y-size],[box.x-size,box.y+box.height],[box.x+box.width,box.y+box.height]]
-    .map(([x,y])=>({x,y,width:size,height:size}));
+  // Center each joint on the seam. A card's bottom grips exactly overlap
+  // the next card's top grips, forming a single shared black connection.
+  return [[box.x,box.y],[box.x+box.width,box.y],[box.x,box.y+box.height],[box.x+box.width,box.y+box.height]]
+    .map(([x,y])=>({x:x-size/2,y:y-size/2,width:size,height:size}));
 }

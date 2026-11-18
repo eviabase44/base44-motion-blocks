@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {capabilityCopy,capabilityOffset} from '../src/v2/capability-motion.js';
+import {capabilityCopy,capabilityOffset,capabilityLayout,connectorBoxes} from '../src/v2/capability-motion.js';
 import {planSequence,validateSource} from '../src/v2/model.js';
 const fixture=JSON.parse(await readFile(new URL('../examples/v2-wireframe.json',import.meta.url)));
 
@@ -22,4 +22,22 @@ test('connector columns move oppositely and preserve vertical position across th
   }
   for(let f=0;f<36;f++)assert.equal(capabilityOffset(f,0,movement)+capabilityOffset(f,1,movement),0);
  }
+});
+
+test('different image ratios pack edge to edge with overlapping connector joints',()=>{
+ const tiles=[{width:170,height:172},{width:228,height:128},{width:228,height:127},{width:230,height:296},{width:1672,height:944},{width:226,height:102}];
+ for(const movement of [0,1,1.5])for(let frame=0;frame<36;frame++){
+  const boxes=capabilityLayout(tiles,frame,frame<18?620:10,movement);
+  assert.equal(boxes[0].x+boxes[0].width,boxes[1].x);
+  boxes.forEach((b,i)=>{
+   assert.ok(Math.abs(b.width/b.height-tiles[i].width/tiles[i].height)<1e-10);
+   if(i<2)return;
+   const previous=boxes[i-2];assert.equal(b.y,previous.y+previous.height);
+   const before=connectorBoxes(previous),after=connectorBoxes(b);
+   assert.deepEqual(before[2],after[0]);assert.deepEqual(before[3],after[1]);
+  });
+ }
+ // A missing observation must not leave an empty reserved slot.
+ tiles[2]=undefined;const boxes=capabilityLayout(tiles,0,10);
+ assert.equal(boxes[4].y,boxes[0].y+boxes[0].height);
 });

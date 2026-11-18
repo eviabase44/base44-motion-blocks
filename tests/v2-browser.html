@@ -30,10 +30,21 @@ document.querySelector('#run').onclick=async()=>{try{
    const media=tile.querySelector('[data-capability-role]'),grips=[...tile.querySelectorAll('[data-connector-for]')];
    if(!media||grips.length!==4){errors.push('Disconnected capability grips');continue;}
    const x=Number(media.getAttribute('x')),y=Number(media.getAttribute('y')),w=Number(media.getAttribute('width')),h=Number(media.getAttribute('height'));
-   const corners=[[x-10,y-10],[x+w,y-10],[x-10,y+h],[x+w,y+h]];
+   const corners=[[x-5,y-5],[x+w-5,y-5],[x-5,y+h-5],[x+w-5,y+h-5]];
    grips.forEach((g,j)=>{if(Math.abs(Number(g.getAttribute('x'))-corners[j][0])>.001||Math.abs(Number(g.getAttribute('y'))-corners[j][1])>.001||g.closest('[data-element-id]')!==tile)errors.push('Grip drifted from image');});
   }
   if(!svg.querySelector('[data-element-id="tile-0"]').getAttribute('transform').includes('12 -8'))errors.push('Connector group lost saved edits');
+  const clean=structuredClone(adjusted);clean.showcase.motion.elements={};
+  const connected=renderShot('capabilities',f,clean,{wireframe:false}),columns=[[],[]];
+  for(const tile of connected.querySelectorAll('[data-element-id^="tile-"]')){
+   const i=Number(tile.dataset.elementId.split('-')[1]);columns[i%2].push(tile);
+  }
+  for(const column of columns)column.slice(1).forEach((tile,j)=>{
+   const previous=column[j],a=JSON.parse(previous.dataset.elementBox),b=JSON.parse(tile.dataset.elementBox);
+   if(Math.abs(a.y+a.height-b.y)>.001)errors.push('Gap between connected cards');
+   for(const side of [0,1]){const upper=previous.querySelector(`[data-connector-corner="${side+2}"]`),lower=tile.querySelector(`[data-connector-corner="${side}"]`);for(const key of ['x','y'])if(Math.abs(Number(upper.getAttribute(key))-Number(lower.getAttribute(key)))>.001)errors.push('Connector joint did not overlap');}
+  });
+  if(columns.every(c=>c.length)){const a=JSON.parse(columns[0][0].dataset.elementBox),b=JSON.parse(columns[1][0].dataset.elementBox);if(Math.abs(a.x+a.width-b.x)>.001)errors.push('Gap between image columns');}
  }
  if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
  // The asset identity and exact source viewport must survive the cut unchanged.

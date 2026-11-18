@@ -8,7 +8,7 @@ import {imageRegion} from './render.js';
 import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
 import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox,bundleVisuals,bundlePose,BUNDLE_SLOTS} from './asset-bundle.js';
-import {capabilityCopy,capabilityOffset,connectorBoxes} from './capability-motion.js';
+import {capabilityCopy,capabilityLayout,connectorBoxes} from './capability-motion.js';
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 // Sampled at 12 fps from a 24 fps score. No wall-clock or random state.
@@ -124,9 +124,10 @@ function capabilities(plan,frame,o){
   const copy=wrap(capabilityCopy(plan,left),p,64.719,433,3),x=left?480:112;
   copy.rows.forEach((r,i)=>n.push(layer(`benefit-${i}`,`Benefit line ${i+1}`,text(r,x,243+i*57.785,copy.size,p,{'data-benefit':true}))));
   const photos=imagery(plan),tiles=[component(plan.selected[0]),photos[0],photos[1],component(plan.selected[1]),component(plan.selected[2]),photos[2]],baseX=left?10:620;
+  const boxes=capabilityLayout(tiles,frame,baseX,o.motion.movement);
   for(let i=0;i<6;i++){
     if(!tiles[i])continue;
-    const x=baseX+i%2*203,y=17+Math.floor(i/2)*214+capabilityOffset(frame,i%2,o.motion.movement),b={x,y,width:195,height:204};
+    const b=boxes[i];
     const m=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i),fit=fitRect(sourceRegion(m),b);
     // The image and its four grips are one editable layer. Dragging/resizing a
     // grip therefore adjusts the image, and saved tweaks keep them connected.
