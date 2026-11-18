@@ -98,7 +98,7 @@ function contentFields(){const s=currentShot(selected);$('content-title').textCo
   if(payload.showcase&&selected==='collage'){syncShowcase(payload).selected.forEach(f=>fields.append(inputField(f.name,f.title,value=>mutate(p=>{p.showcase.features.find(x=>x.id===f.id).title=value;}),90)));media.append(html('p',{class:'media-note'},'The center card anchors the selected features and actual app images. All media retains its source proportions.'));}
   else if(selected==='collage')payload.cards.forEach((c,i)=>{fields.append(inputField(`Card ${String(i+1).padStart(2,'0')}`,c.title,value=>mutate(p=>{p.cards[i].title=value;}),34));media.append(mediaRow(c.media,i,(key,value)=>mutate(p=>{p.cards[i].media[key]=value;}),[3,4,6].includes(i)));});
   if(baseShot(selected)==='focus'&&!payload.showcase)fields.append(inputField('Feature context',payload.copy.detail,value=>mutate(p=>{p.copy.detail=value;}),55));
-  if(selected==='ending')fields.append(html('p',{class:'media-note'},payload.showcase?'Your Figma symbol row resolves into the single-line Proudly built on Base44 lockup.':'“Proudly built on” above the Base44 symbol and wordmark.'));
+  if(selected==='ending')fields.append(html('p',{class:'media-note'},payload.showcase?'Proudly built on swaps into Base44 glyphs, contracts, and resolves into the centered logo.':'“Proudly built on” above the Base44 symbol and wordmark.'));
   if(baseShot(selected)==='focus'){
     const feature=payload.showcase?syncShowcase(payload).selected[selected==='focus2'?1:selected==='focus3'?2:0]:null;
     const usePage=feature?.page&&(variants[selected]??'original')==='original';

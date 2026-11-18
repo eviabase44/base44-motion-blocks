@@ -9,6 +9,7 @@ import {settingsFor,motionFrame} from './motion-settings.js';
 import {layer} from './element-render.js';
 import {assetBundle,assetHome,anchorOnPage,assetScrollProgress,blendBox,bundleVisuals,bundlePose,BUNDLE_SLOTS} from './asset-bundle.js';
 import {capabilityCopy,capabilityLayout,connectorBoxes} from './capability-motion.js';
+import {renderEndcard} from './endcard.js';
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 // Sampled at 12 fps from a 24 fps score. No wall-clock or random state.
@@ -136,19 +137,7 @@ function capabilities(plan,frame,o){
   }
   return n;
 }
-function ending(plan,frame,o){
-  const p=plan.source,n=[layer('background','Background',rect(0,0,960,540,p.theme.surface))];
-  // B44-06 F1200–1206 uses held glyph substitutions, not a row fade.
-  // Adapt its 3/1/3 native-frame holds to these seven Figma symbols at 12 fps.
-  if(frame<o.motion.symbolFrames){
-    const native=Math.floor(frame/Math.max(1,o.motion.symbolFrames-1)*6),key=native<3?0:native<4?1:2,orders=[[0,1,2,3,4,5,6],[3,0,5,2,6,1,4],[5,3,1,0,2,4,6]],order=orders[key];
-    for(let i=0;i<7;i++){const symbol=order[i],height=symbol===1?28.796:symbol===5?27.102:symbol===6?25.067:23.714,w=symbol===5?27.102:symbol===6?25.006:23.714;
-      n.push(layer(`symbol-${i}`,`Symbol ${i+1}`,el('image',{href:symbols[symbol],x:(i===6?506.087:251+i*42)+(23.714-w)/2,y:249+(23.714-height)/2,width:w,height,'data-symbol':symbol,'data-symbol-key':key})));}
-  }
-  else {n.push(layer('credit','Proudly built on',text('Proudly built on',251,241,33.602,p,{'data-credit':true})),layer('symbol-6','Arrow',el('image',{href:symbols[6],x:506.087,y:247,width:25.006,height:25.067})));}
-  n.push(layer('logo','Base44 logo',el('image',{href:logo,x:562,y:245,width:147,height:25.801,'aria-label':'Base44 official logo'})));
-  return n;
-}
+function ending(plan,frame,o){return renderEndcard(frame,o.motion,plan.source);}
 export function renderFigmaFlow(id,rawFrame,plan,options){
   const motion=settingsFor(plan.source,id),last=BEATS.find(s=>s.id===id).frames-1,frame=motionFrame(rawFrame,last,motion.tempo);options={...options,motion};
   const fn=FOCUS_IDS.includes(id)?()=>feature(plan,id,frame,options):({hook:opening,reveal:homepage,collage:bundle,capabilities,ending})[id];

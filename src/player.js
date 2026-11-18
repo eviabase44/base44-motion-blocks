@@ -3,6 +3,7 @@ import {cutFor,compositeCut} from './v2/transitions.js';
 import {validateMotion,motionStyle,playbackCadence} from './v2/motion-settings.js';
 import {playbackShots,baseShot,renderShowcase,syncShowcase} from './showcase.js';
 import {preloadMedia} from './media.js';
+import {preloadEndcard} from './v2/endcard.js';
 import {FPS,SHOTS,TOTAL_FRAMES,getShot,clampFrame,assertPayload} from './contracts.js';
 import {stage} from './svg.js';
 import {renderHook} from './shots/hook.js';
@@ -57,7 +58,7 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
   let layouts=normalizeVariants(variants);
   if(!order.length)throw new Error('Sequence cannot be empty');
   let total=order.reduce((n,id)=>n+spec(id).frames,0),frame=0,playing=false,loop=false,raf=0,origin=0,disposed=false,revision=0;
-  await loadAppFont(app);if(app.showcase){syncShowcase(app);if(!wireframe)await preloadMedia(app);}
+  await loadAppFont(app);if(app.showcase){await preloadEndcard();syncShowcase(app);if(!wireframe)await preloadMedia(app);}
   // Check text capacity for every shot before accepting the payload.
   const check=(p,nextLayouts=layouts)=>{for(const s of playbackShots(p)??SHOTS){try{renderShot(s.id,s.frames-1,p,{wireframe,variant:nextLayouts[s.id]});}catch(error){throw new Error(`${s.name} (${nextLayouts[s.id]}): ${error.message}`);}}};check(app);
   let audio=null,audioSrc=null,sound=true;
@@ -88,10 +89,10 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
     setSound(value){sound=Boolean(value);syncAudio(true);},
     getVariants(){return {...layouts};},
     setMotion(value){if(!app.showcase)throw Error('Animation controls require the v2 flow.');const motion=validateMotion(value);revision++;app={...app,showcase:{...app.showcase,motion}};draw();},
-    async applyTemplate({payload,variants:nextVariants,wireframe:nextWireframe=wireframe}){const ticket=++revision,p=assertPayload(payload),next=normalizeVariants(nextVariants);await loadAppFont(p);if(p.showcase){syncShowcase(p);if(!nextWireframe)await preloadMedia(p);}if(disposed||ticket!==revision)return false;check(p,next);app=p;order=order.filter(id=>(playbackShots(p)??SHOTS).some(s=>s.id===id));if(!order.length)order=['hook'];total=order.reduce((n,id)=>n+spec(id).frames,0);frame=Math.min(frame,total-1);layouts=next;wireframe=Boolean(nextWireframe);draw();return true;},
+    async applyTemplate({payload,variants:nextVariants,wireframe:nextWireframe=wireframe}){const ticket=++revision,p=assertPayload(payload),next=normalizeVariants(nextVariants);await loadAppFont(p);if(p.showcase){await preloadEndcard();syncShowcase(p);if(!nextWireframe)await preloadMedia(p);}if(disposed||ticket!==revision)return false;check(p,next);app=p;order=order.filter(id=>(playbackShots(p)??SHOTS).some(s=>s.id===id));if(!order.length)order=['hook'];total=order.reduce((n,id)=>n+spec(id).frames,0);frame=Math.min(frame,total-1);layouts=next;wireframe=Boolean(nextWireframe);draw();return true;},
     setWireframe(value){wireframe=Boolean(value);draw();},
     getWireframe(){return wireframe;},
-    async update(next){const ticket=++revision,p=assertPayload(next);await loadAppFont(p);if(p.showcase){syncShowcase(p);if(!wireframe)await preloadMedia(p);}if(disposed||ticket!==revision)return false;check(p);app=p;order=order.filter(id=>(playbackShots(p)??SHOTS).some(s=>s.id===id));if(!order.length)order=['hook'];total=order.reduce((n,id)=>n+spec(id).frames,0);frame=Math.min(frame,total-1);draw();return true;},
+    async update(next){const ticket=++revision,p=assertPayload(next);await loadAppFont(p);if(p.showcase){await preloadEndcard();syncShowcase(p);if(!wireframe)await preloadMedia(p);}if(disposed||ticket!==revision)return false;check(p);app=p;order=order.filter(id=>(playbackShots(p)??SHOTS).some(s=>s.id===id));if(!order.length)order=['hook'];total=order.reduce((n,id)=>n+spec(id).frames,0);frame=Math.min(frame,total-1);draw();return true;},
     getPayload(){return structuredClone(app);},
     getState:state,
     destroy(){this.pause();audio=null;disposed=true;revision++;container.replaceChildren();}

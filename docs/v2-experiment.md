@@ -17,7 +17,7 @@ The 2026-11-15 Figma revision is the current default. It keeps the approved tota
 | 10–12s | Feature 2 | Second selected page, title and numbered corner. |
 | 12–14s | Feature 3 | Third selected page, title and numbered corner. |
 | 14–17s | Capabilities | Benefit copy with the Figma right- and left-hand grid arrangements. |
-| 17–19s | Ending | Original Figma vector symbols resolve to “Proudly built on” and the Base44 lockup. |
+| 17–19s | Ending | “Proudly built on”, then the source glyph-to-logo decode and centered lockup. |
 
 See [the Figma node and motion-source mapping](figma-flow.md). The supplied earlier video was used for the previous opening experiment; this revision follows the newer user-designed frames. Existing alternative layouts remain selectable in the same editor. V1 payloads retain their previous five-shot timing and design.
 

@@ -50,7 +50,8 @@ document.querySelector('#run').onclick=async()=>{try{
    if(!joints.some(h=>h.i!==g.i&&near(g.x,h.x)&&near(g.y,h.y)))errors.push('Interior corner has no overlapping partner');
   }
  }
- if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
+ if(!original('ending',9).querySelector('[data-credit]')||original('ending',10).querySelector('[data-credit]'))errors.push('Ending credit-to-glyph timing changed');
+ if(original('ending',10).querySelector('[data-element-id="logo"]')||!original('ending',15).querySelector('[data-element-id="logo"]'))errors.push('Logo visible before the source decode');
  // The asset identity and exact source viewport must survive the cut unchanged.
  const tail=original('reveal',41).querySelector('[data-clicked-asset]'),head=original('collage',0).querySelector('[data-clicked-asset]');
  if(source.bundle){
@@ -66,7 +67,8 @@ document.querySelector('#run').onclick=async()=>{try{
   if(!a||!b||a.getAttribute('x')===b.getAttribute('x'))errors.push('Static feature background '+id);
  }
  const glyphs=f=>[...original('ending',f).querySelectorAll('[data-symbol]')].map(n=>n.dataset.symbol).join(',');
- if(glyphs(0)!==glyphs(1)||glyphs(0)===glyphs(2)||glyphs(2)===glyphs(3)||glyphs(3)!==glyphs(4))errors.push('Wrong held glyph cadence');
+ if(glyphs(10).split(',').length!==7||glyphs(11).split(',').length!==6||glyphs(12).split(',').length!==5||glyphs(15)!=='')errors.push('Wrong source glyph-to-letter sequence');
+ for(const f of [15,18,23]){const logo=original('ending',f).querySelector('[data-element-id="logo"]'),b=JSON.parse(logo.dataset.elementBox);if(Math.abs(b.x+b.width/2-480)>.001||Math.abs(b.y+b.height/2-271)>.001)errors.push('Endcard lockup not source-centered');}
 
  for(const mode of ['default','minimum','maximum','mixed']){
   const adjusted=structuredClone(p);adjusted.showcase.motion={version:1,shots:{}};
@@ -95,12 +97,12 @@ document.querySelector('#run').onclick=async()=>{try{
  for(const f of [0,12,23]){const svg=renderShot('focus',f,adjusted,{wireframe:false});if(!svg.querySelector('[data-element-id="headline"]').getAttribute('transform').includes('12.1 -3')||svg.querySelector('[data-element-id="number"]').getAttribute('visibility')!=='hidden')errors.push('Element edits lost in playback');if(svg.querySelector('#element-overlay'))errors.push('Editor handles leaked into render');}
  const player=await createMotionPlayer(fixture,{payload:p,sequence:SHOWCASE_SHOTS.map(s=>s.id),wireframe:false});let start=0;
  for(const shot of SHOWCASE_SHOTS){player.seekFrame(start);if(player.getState().shot!==shot.id)errors.push('Wrong cut '+shot.id);start+=shot.frames;}
- if(player.getState().duration!==19)errors.push('Wrong duration');player.seekFrame(227);if(!fixture.textContent.includes('Proudly built on')||fixture.querySelectorAll('image').length!==2)errors.push('Ending changed');
+ if(player.getState().duration!==19)errors.push('Wrong duration');player.seekFrame(227);if(fixture.querySelector('[data-credit]')||!fixture.querySelector('[data-endcard-part="mark"]')||!fixture.querySelector('[data-endcard-part="wordmark"]'))errors.push('Ending changed');
  player.setShot('focus2');player.setVariant('focus2','six-week');player.seekFrame(23);if(!fixture.textContent.includes('Find')&&!fixture.textContent.includes('Your'))errors.push('Wrong feature title');if(player.getVariants().focus==='six-week')errors.push('Second feature layout changed first feature');
  player.setMotion({version:1,shots:{focus2:{tempo:.7,hover:10}}});if(player.getPayload().showcase.motion.shots.focus2.hover!==10)errors.push('Player discarded motion settings');
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Overlapping corners, aligned rows, shared scrolling and saved edits','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Overlapping corners, aligned rows, shared scrolling and saved edits','Animated feature background type','Measured glyph-to-letter decode and centered logo hold','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>

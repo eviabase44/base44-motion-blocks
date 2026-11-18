@@ -14,3 +14,4 @@ assets/fonts/Dazzed-SemiBold.ttf
 capture.html
 review.json
 reference-provenance.json
+tests/*.local.html

@@ -38,7 +38,7 @@ The scroll cannot exceed supplied capture pixels. Nonzero scroll settings are co
 
 - Related cards retain SH22 onset, relative scale and translation samples, retargeted to four larger, separated positions. Scaling uses the panel center, with a 20px canvas inset constraining the entry overshoot so components stay whole. This is a bounded adaptation of the paths. They reach their destinations by frame 11 of the 18-frame bundle. The shorter hold moves into the features sooner. Existing layer IDs and movement controls are retained.
 - The three feature backgrounds enter on offset keys and continue a restrained lateral drift behind the held UI. **Background type travel** controls the amount, including zero.
-- The ending uses three held glyph configurations adapted from B44-06 native frames 1200–1206, retargeted to the seven Figma symbol slots. The default five output frames map to states `0,0,1,2,2`, then the fixed credit. **Symbol flicker duration** changes the interval. This is a declared adaptation, not a frame-exact recreation of the entire source ending.
+- The ending now follows the measured **B44-04 Own Words** glyph-to-logo decode. “Proudly built on” precedes the glyphs; the logo is absent until the orange mark resolves. **Logo build duration** retains the `symbolFrames` saved-setting key. See [ending source map](endcard-copycat.md).
 - All controls participate in Save/Load/Download/Import tweaks. The app font, palette, copy, fixed Base44 lockup and direct element editing remain intact.
 
 ## Local PUSHBOX review

@@ -12,7 +12,7 @@ export const MOTION_FIELDS={
   backgroundMotion:{label:'Background type travel',min:0,max:1.5,step:.05,format:v=>Math.round(v*100)+'%'},
   hover:{label:'Card hover lift',min:0,max:12,step:1,format:v=>v+'px'},
   cutFrames:{label:'Cut duration',min:2,max:12,step:1,format:v=>(v/12).toFixed(2)+'s'},
-  symbolFrames:{label:'Symbol flicker duration',min:2,max:16,step:1,format:v=>(v/12).toFixed(2)+'s'}
+  symbolFrames:{label:'Logo build duration',min:2,max:16,step:1,format:v=>(v/12).toFixed(2)+'s'}
 };
 export const CUT_TYPES={cut:'Hard cut',dissolve:'Dissolve','slide-left':'Slide left','slide-right':'Slide right',wipe:'Wipe across'};
 const originalControls=id=>({hook:['tempo','wordFrames','joinFrames'],reveal:['tempo','scroll'],collage:['tempo','movement'],focus:['tempo','wordFrames','hover','backgroundMotion'],focus2:['tempo','wordFrames','hover','backgroundMotion'],focus3:['tempo','wordFrames','hover','backgroundMotion'],capabilities:['tempo','movement'],ending:['symbolFrames']})[id]??[];

@@ -8,6 +8,7 @@ import {layer} from './element-render.js';
 import {HOME,FEATURE,FOCUS_IDS,logo,symbols,surface,background,markers,media,wrap,component,imagery,BUNDLE,FIGMA_NODES,pageRegion} from './figma-flow.js';
 import {clamp,lerp,phase,smoother,arrive,pulse,curvePoint} from './refined-motion.js';
 import {capabilityCopy,capabilityLayout,connectorBoxes} from './capability-motion.js';
+import {renderEndcard} from './endcard.js';
 
 function pose(nodes,{x=0,y=0,opacity=1,scale=1,cx=0,cy=0}={}){return group(Array.isArray(nodes)?nodes:[nodes],{opacity,transform:`translate(${x} ${y}) translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`});}
 // A local viewport masks the baseline while each word travels independently.
@@ -97,15 +98,7 @@ function capabilities(plan,f,o){
   }
   return n;
 }
-function ending(plan,f,o){
-  const p=plan.source,m=o.motion,n=[layer('background','Background',rect(0,0,960,540,p.theme.surface))],exit=arrive(f,m.symbolFrames,3,m.softness);
-  if(exit<1)for(let i=0;i<6;i++){const a=arrive(f,i*.35,3.3,m.softness),height=i===1?28.796:i===5?27.102:23.714,w=i===5?27.102:23.714;n.push(layer(`symbol-${i}`,`Symbol ${i+1}`,pose(el('image',{href:symbols[i],x:251+i*42,y:249+(23.714-height)/2,width:w,height,'data-symbol':i}),{y:7*(1-a)-6*exit,opacity:a*(1-exit)})));}
-  const credit=arrive(f,m.symbolFrames+1,4,m.softness);
-  if(credit>0)n.push(layer('credit','Proudly built on',pose(text('Proudly built on',251,241,33.602,p,{'data-credit':true}),{y:8*(1-credit),opacity:credit})));
-  n.push(layer('symbol-6','Arrow',pose(el('image',{href:symbols[6],x:506.087,y:247,width:25.006,height:25.067}),{x:-5*(1-arrive(f,1.5,4,.4)),opacity:arrive(f,1,3,.4)})));
-  n.push(layer('logo','Base44 logo',pose(el('image',{href:logo,x:562,y:245,width:147,height:25.801,'aria-label':'Base44 official logo'}),{y:4*(1-arrive(f,.6,4,.4)),opacity:.6+.4*arrive(f,.6,4,.4)})));
-  return n;
-}
+function ending(plan,f,o){return renderEndcard(f,o.motion,plan.source);}
 export function renderRefinedFlow(id,rawFrame,plan,options){
   const motion=settingsFor(plan.source,id),last=BEATS.find(b=>b.id===id).frames-1,frame=motionFrame(rawFrame,last,motion.tempo),o={...options,motion};
   const fn=FOCUS_IDS.includes(id)?()=>feature(plan,id,frame,o):({hook:opening,reveal:homepage,collage:bundle,capabilities,ending})[id];
