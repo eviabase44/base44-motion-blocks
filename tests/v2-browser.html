@@ -35,16 +35,20 @@ document.querySelector('#run').onclick=async()=>{try{
   }
   if(!svg.querySelector('[data-element-id="tile-0"]').getAttribute('transform').includes('12 -8'))errors.push('Connector group lost saved edits');
   const clean=structuredClone(adjusted);clean.showcase.motion.elements={};
-  const connected=renderShot('capabilities',f,clean,{wireframe:false}),columns=[[],[]];
-  for(const tile of connected.querySelectorAll('[data-element-id^="tile-"]')){
-   const i=Number(tile.dataset.elementId.split('-')[1]);columns[i%2].push(tile);
+  const connected=renderShot('capabilities',f,clean,{wireframe:false}),tiles=[...connected.querySelectorAll('[data-element-id^="tile-"]')];
+  const rows=[];
+  for(let i=0;i<tiles.length;i+=2)rows.push(tiles.slice(i,i+2));
+  const box=tile=>JSON.parse(tile.dataset.elementBox),near=(a,b)=>Math.abs(a-b)<.001;
+  for(const [i,row]of rows.entries()){
+   const a=box(row[0]),b=box(row.at(-1));
+   if(row.length===2&&(!near(a.y,b.y)||!near(a.height,b.height)||!near(a.x+a.width,b.x)))errors.push('Misaligned neighbouring cards');
+   if(i){const previous=rows[i-1],first=box(previous[0]),last=box(previous.at(-1));if(!near(first.y+first.height,a.y)||!near(first.x,a.x)||!near(last.x+last.width,b.x+b.width))errors.push('Gap between connected rows');}
   }
-  for(const column of columns)column.slice(1).forEach((tile,j)=>{
-   const previous=column[j],a=JSON.parse(previous.dataset.elementBox),b=JSON.parse(tile.dataset.elementBox);
-   if(Math.abs(a.y+a.height-b.y)>.001)errors.push('Gap between connected cards');
-   for(const side of [0,1]){const upper=previous.querySelector(`[data-connector-corner="${side+2}"]`),lower=tile.querySelector(`[data-connector-corner="${side}"]`);for(const key of ['x','y'])if(Math.abs(Number(upper.getAttribute(key))-Number(lower.getAttribute(key)))>.001)errors.push('Connector joint did not overlap');}
-  });
-  if(columns.every(c=>c.length)){const a=JSON.parse(columns[0][0].dataset.elementBox),b=JSON.parse(columns[1][0].dataset.elementBox);if(Math.abs(a.x+a.width-b.x)>.001)errors.push('Gap between image columns');}
+  const joints=tiles.flatMap((tile,i)=>[...tile.querySelectorAll('[data-connector-for]')].map(g=>({i,j:Number(g.dataset.connectorCorner),x:Number(g.getAttribute('x')),y:Number(g.getAttribute('y'))})));
+  const firstRight=rows[0].length-1,lastLeft=(rows.length-1)*2,lastRight=tiles.length-1;
+  for(const g of joints){if((g.i===0&&g.j===0)||(g.i===firstRight&&g.j===1)||(g.i===lastLeft&&g.j===2)||(g.i===lastRight&&g.j===3))continue;
+   if(!joints.some(h=>h.i!==g.i&&near(g.x,h.x)&&near(g.y,h.y)))errors.push('Interior corner has no overlapping partner');
+  }
  }
  if(original('ending',4).querySelector('[data-credit]')||!original('ending',5).querySelector('[data-credit]'))errors.push('Original ending cadence changed');
  // The asset identity and exact source viewport must survive the cut unchanged.
@@ -97,6 +101,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Attached connectors follow image geometry and saved edits','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Overlapping corners, aligned rows, shared scrolling and saved edits','Animated feature background type','Held glyph flicker cadence','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>
