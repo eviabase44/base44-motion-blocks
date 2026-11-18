@@ -12,34 +12,38 @@ test('capability screens retain separate copy and support older payloads',()=>{
  for(const value of ['',null,42,'x'.repeat(101)])assert.throws(()=>validateSource({...p,benefitFollowup:value}));
 });
 
-test('connected cards share a vertical pull and preserve position across the cut',()=>{
- for(const movement of [0,.5,1,1.5]){
-  assert.equal(capabilityOffset(17,movement),capabilityOffset(18,movement));
-  const positions=Array.from({length:36},(_,f)=>capabilityOffset(f,movement));
-  positions.slice(1).forEach((y,i)=>assert.ok(y<=positions[i]));
+test('columns pull in opposite directions and preserve position across the cut',()=>{
+ for(const movement of [0,.5,1,1.5])for(const column of [0,1]){
+  assert.equal(capabilityOffset(17,column,movement),capabilityOffset(18,column,movement));
+  const positions=Array.from({length:36},(_,f)=>capabilityOffset(f,column,movement));
+  positions.slice(1).forEach((y,i)=>assert.ok(column?y>=positions[i]:y<=positions[i]));
   assert.equal(Math.abs(positions.at(-1)-positions[0]),64*movement);
+  for(let f=0;f<36;f++)assert.ok(Math.abs(capabilityOffset(f,0,movement)+capabilityOffset(f,1,movement))<1e-8);
  }
 });
 
-test('different image ratios scale into aligned rows with overlapping connector corners',()=>{
+test('fixed-width tiles keep source ratios and share corner joints within each column',()=>{
  const tiles=[{width:170,height:172},{width:228,height:128},{width:228,height:127},{width:230,height:296},{width:1672,height:944},{width:226,height:102}];
  const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
  for(const movement of [0,1,1.5])for(let frame=0;frame<36;frame++){
   const baseX=frame<18?620:10,boxes=capabilityLayout(tiles,frame,baseX,movement);
   boxes.forEach((b,i)=>{
+   near(b.width,195);near(b.x,baseX+(i%2)*195);
    near(b.width/b.height,tiles[i].width/tiles[i].height);
-   if(i%2===0){const next=boxes[i+1];near(b.y,next.y);near(b.height,next.height);near(b.x+b.width,next.x);near(b.x,baseX);near(next.x+next.width,baseX+390);}
-   if(i>=2)near(boxes[i-2].y+boxes[i-2].height,b.y);
+   if(i>=2){
+    const previous=boxes[i-2];near(previous.y+previous.height,b.y);
+    const lower=connectorBoxes(previous).slice(2),upper=connectorBoxes(b).slice(0,2);
+    lower.forEach((g,j)=>{near(g.x,upper[j].x);near(g.y,upper[j].y);});
+   }
   });
-  // Every corner except the four outside corners has an identical partner.
-  const joints=boxes.flatMap((b,i)=>connectorBoxes(b).map((g,j)=>({...g,i,j})));
-  for(const g of joints){if((g.i===0&&g.j===0)||(g.i===1&&g.j===1)||(g.i===4&&g.j===2)||(g.i===5&&g.j===3))continue;
-   assert.ok(joints.some(h=>h.i!==g.i&&Math.abs(g.x-h.x)<1e-8&&Math.abs(g.y-h.y)<1e-8),'Unpaired interior corner');
-  }
+  assert.notEqual(boxes[0].height,boxes[1].height);
  }
- // A missing observation must not leave an empty reserved slot.
+ // Missing media leaves no vertical hole and keeps surviving tile IDs/columns.
  tiles[2]=undefined;const boxes=capabilityLayout(tiles,0,10);
- near(boxes[3].y,boxes[0].y+boxes[0].height);near(boxes[3].y,boxes[4].y);assert.equal(boxes[2],null);
+ near(boxes[4].y,boxes[0].y+boxes[0].height);near(boxes[3].y,boxes[1].y+boxes[1].height);assert.equal(boxes[2],null);
  const a=capabilityLayout(tiles,0,10),b=capabilityLayout(tiles,35,10);
- a.forEach((box,i)=>{if(box)near(b[i].y-box.y,-64);});
+ a.forEach((box,i)=>{if(box)near(b[i].y-box.y,i%2?64:-64);});
+ // A cropped feature uses the selected region's aspect ratio, not the page's.
+ const region={x:40,y:30,width:120,height:300};
+ const crop=capabilityLayout([{width:1200,height:800,region}],0,10)[0];near(crop.height,487.5);
 });

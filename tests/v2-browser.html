@@ -36,18 +36,24 @@ document.querySelector('#run').onclick=async()=>{try{
   if(!svg.querySelector('[data-element-id="tile-0"]').getAttribute('transform').includes('12 -8'))errors.push('Connector group lost saved edits');
   const clean=structuredClone(adjusted);clean.showcase.motion.elements={};
   const connected=renderShot('capabilities',f,clean,{wireframe:false}),tiles=[...connected.querySelectorAll('[data-element-id^="tile-"]')];
-  const rows=[];
-  for(let i=0;i<tiles.length;i+=2)rows.push(tiles.slice(i,i+2));
   const box=tile=>JSON.parse(tile.dataset.elementBox),near=(a,b)=>Math.abs(a-b)<.001;
-  for(const [i,row]of rows.entries()){
-   const a=box(row[0]),b=box(row.at(-1));
-   if(row.length===2&&(!near(a.y,b.y)||!near(a.height,b.height)||!near(a.x+a.width,b.x)))errors.push('Misaligned neighbouring cards');
-   if(i){const previous=rows[i-1],first=box(previous[0]),last=box(previous.at(-1));if(!near(first.y+first.height,a.y)||!near(first.x,a.x)||!near(last.x+last.width,b.x+b.width))errors.push('Gap between connected rows');}
+  const columns=[0,1].map(c=>tiles.filter(tile=>Number(tile.dataset.elementId.split('-')[1])%2===c));
+  for(const column of columns)for(const [i,tile] of column.entries()){
+   const a=box(tile);if(!near(a.width,195))errors.push('Tile width changed with source ratio');
+   if(a.x<5-.001||a.x+a.width>955+.001)errors.push('Column width clipped at canvas edge');
+   if(i){
+    const previous=column[i-1],b=box(previous);if(!near(b.y+b.height,a.y)||!near(b.x,a.x))errors.push('Gap between stacked cards');
+    const lower=[...previous.querySelectorAll('[data-connector-for]')].slice(2),upper=[...tile.querySelectorAll('[data-connector-for]')].slice(0,2);
+    lower.forEach((g,j)=>{if(!near(Number(g.getAttribute('x')),Number(upper[j].getAttribute('x')))||!near(Number(g.getAttribute('y')),Number(upper[j].getAttribute('y'))))errors.push('Stacked corner squares do not overlap');});
+   }
   }
-  const joints=tiles.flatMap((tile,i)=>[...tile.querySelectorAll('[data-connector-for]')].map(g=>({i,j:Number(g.dataset.connectorCorner),x:Number(g.getAttribute('x')),y:Number(g.getAttribute('y'))})));
-  const firstRight=rows[0].length-1,lastLeft=(rows.length-1)*2,lastRight=tiles.length-1;
-  for(const g of joints){if((g.i===0&&g.j===0)||(g.i===firstRight&&g.j===1)||(g.i===lastLeft&&g.j===2)||(g.i===lastRight&&g.j===3))continue;
-   if(!joints.some(h=>h.i!==g.i&&near(g.x,h.x)&&near(g.y,h.y)))errors.push('Interior corner has no overlapping partner');
+  if(columns.every(c=>c.length)&&!near(box(columns[0][0]).x+195,box(columns[1][0]).x))errors.push('Gap between column edges');
+  if(f<35){
+   const next=renderShot('capabilities',f+1,clean,{wireframe:false});
+   for(const tile of tiles){const a=box(tile),b=box(next.querySelector(`[data-element-id="${tile.dataset.elementId}"]`)),c=Number(tile.dataset.elementId.split('-')[1])%2;
+    if(c?b.y<a.y-.001:b.y>a.y+.001)errors.push('Column reversed its scrolling direction');
+    if(f===17&&!near(a.y,b.y))errors.push('Column jumped vertically at composition cut');
+   }
   }
  }
  if(!original('ending',9).querySelector('[data-credit]')||original('ending',10).querySelector('[data-credit]'))errors.push('Ending credit-to-glyph timing changed');
@@ -103,6 +109,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const first=structuredClone(p),last=structuredClone(p);first.showcase.description='First description';last.showcase.description='Latest description';await Promise.all([player.update(first),player.update(last)]);if(player.getPayload().showcase.description!=='Latest description')errors.push('Latest update lost');
  const invalid=structuredClone(p);invalid.showcase.features[0].media.src='/missing-image.jpg';let rejected=false;try{await player.update(invalid);}catch{rejected=true;}if(!rejected||player.getPayload().showcase.description!=='Latest description')errors.push('Broken source replaced the working player');
  const baseline=structuredClone(p);delete baseline.showcase;await player.update(baseline);player.setSequence(SHOTS.map(s=>s.id));if(player.getState().duration!==15)errors.push('Legacy sequence compatibility failed');
- player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Overlapping corners, aligned rows, shared scrolling and saved edits','Animated feature background type','Measured glyph-to-letter decode and centered logo hold','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
+ player.destroy();fixture.replaceChildren(renderShot('focus',23,p,{wireframe:false}));result.textContent=JSON.stringify({status:errors.length?'FAIL':'PASS',frames,cutChecks,duration:19,checks:['Asset identity, outline and exact match-cut geometry','Related asset associations','Separate capability headlines','Fixed widths, variable heights, overlapping stack corners, opposite scrolling and saved edits','Animated feature background type','Measured glyph-to-letter decode and centered logo hold','Original player and renderer integration','All existing layouts across eight shots','Landscape, portrait and square pages remain whole','Restored opening, capability flip and ending cadence','All cut types and durations','Editable layer coverage and unique IDs','Element transformations persist during animation','8 exact cuts','Fixed ending','Independent feature layouts','Newest update wins','Missing source rejected','Original 15-second payload compatibility'],errors},null,2);
 }catch(e){result.textContent='FAIL '+e.stack;}};
 </script></body></html>

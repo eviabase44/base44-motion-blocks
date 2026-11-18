@@ -124,7 +124,7 @@ function capabilities(plan,frame,o){
   for(const [i,[x,y]]of [[-280,-75],[-63,159],[-701,408],[617,408]].entries())n.push(layer(`watermark-${i}`,`Watermark ${i+1}`,text('Capabilities',x,y,230,p,{opacity:.04})));
   const copy=wrap(capabilityCopy(plan,left),p,64.719,433,3),x=left?480:112;
   copy.rows.forEach((r,i)=>n.push(layer(`benefit-${i}`,`Benefit line ${i+1}`,text(r,x,243+i*57.785,copy.size,p,{'data-benefit':true}))));
-  const photos=imagery(plan),tiles=[component(plan.selected[0]),photos[0],photos[1],component(plan.selected[1]),component(plan.selected[2]),photos[2]],baseX=left?10:620;
+  const photos=imagery(plan),tiles=[component(plan.selected[0]),photos[0],photos[1],component(plan.selected[1]),component(plan.selected[2]),photos[2]],baseX=left?10:555;
   const boxes=capabilityLayout(tiles,frame,baseX,o.motion.movement);
   for(let i=0;i<6;i++){
     if(!tiles[i])continue;

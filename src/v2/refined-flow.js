@@ -90,9 +90,9 @@ function capabilities(plan,f,o){
   const lead=!left?phase(f,16,2):0,copyX=left?480:112;
   const copy=wrap(capabilityCopy(plan,left),p,64.719,433,3);
   copy.rows.forEach((r,i)=>{const a=arrive(local,i*.65,4.6,m.softness);n.push(layer(`benefit-${i}`,`Benefit line ${i+1}`,pose(text(r,copyX,243+i*57.785,copy.size,p,{'data-benefit':true}),{y:(1-a)*13*m.movement-lead*4,opacity:.85+.15*a})));});
-  const pictures=imagery(plan),tiles=[component(plan.selected[0]),pictures[0],pictures[1],component(plan.selected[1]),component(plan.selected[2]),pictures[2]],baseX=left?10:620;
-  const boxes=capabilityLayout(tiles,f,baseX,m.movement),enter=arrive(f,0,6,m.softness);
-  for(let i=0;i<6;i++){if(!tiles[i])continue;const b={...boxes[i],x:boxes[i].x+(left?-1:1)*(1-enter)*16*m.movement,y:boxes[i].y+(1-enter)*12*m.movement},item=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i),fit=fitRect(sourceRegion(item),b);
+  const pictures=imagery(plan),tiles=[component(plan.selected[0]),pictures[0],pictures[1],component(plan.selected[1]),component(plan.selected[2]),pictures[2]],baseX=left?10:555;
+  const boxes=capabilityLayout(tiles,f,baseX,m.movement),enter=arrive(f,0,6,m.softness),inset=Math.min(16*m.movement,left?baseX-5:960-baseX-390-5);
+  for(let i=0;i<6;i++){if(!tiles[i])continue;const b={...boxes[i],x:boxes[i].x+(left?-1:1)*(1-enter)*inset},item=media({...tiles[i],label:tiles[i].label??plan.selected[i%3].name},p,o.wireframe,i),fit=fitRect(sourceRegion(item),b);
     const grips=connectorBoxes(fit).map((g,j)=>rect(g.x,g.y,g.width,g.height,p.theme.ink,{'data-connector-for':`tile-${i}`,'data-connector-corner':j}));
     n.push(layer(`tile-${i}`,`Tile ${i+1} · ${item.label}`,[imageRegion(item,sourceRegion(item),b,{'data-capability-role':[1,2,5].includes(i)?'app-image':'feature'}),...grips],fit));
   }
