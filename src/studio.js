@@ -49,13 +49,13 @@ function thumbnailFrame(id,variant='original'){return payload.showcase&&variant=
 function thumbnails(){for(const s of shots){const tile=$(`thumb-${s.id}`);tile.querySelector('.mini').replaceChildren(renderShot(s.id,thumbnailFrame(s.id,variants[s.id]),payload,{variant:variants[s.id],wireframe:player?.getWireframe()??true}));}}
 function layoutChoices(){
   const container=$('layout-options');container.replaceChildren();
-  $('layout-count').textContent=payload.showcase?'FIGMA FLOW · 8 SHOTS':'17 LAYOUTS · 5 CARDS';
+  $('layout-count').textContent=payload.showcase?'SAVED VERSION · 8 CARDS':'SAVED VERSION · 5 CARDS';
   $('fixed-ending-note').hidden=selected!=='ending';
   for(const [index,originalShot] of (payload.showcase?shots:SHOTS).entries()){
     const shot=!payload.showcase&&originalShot.id==='focus'&&baseShot(selected)==='focus'?{...originalShot,id:selected}:originalShot;
     const section=html('section',{class:'layout-group','data-shot-group':shot.id,'aria-labelledby':`layout-heading-${shot.id}`});
     const heading=html('div',{class:'section-heading layout-group-heading'}),grid=html('div',{class:'layout-options'});
-    heading.append(html('h3',{id:`layout-heading-${shot.id}`},`${String(index+1).padStart(2,'0')} / ${shot.name}`),html('span',{},`${selected===shot.id?'EDITING · ':''}${shot.id==='ending'?'FIXED END CARD':shot.id==='capabilities'?'FIGMA LAYOUT':'4 LAYOUTS'}`));
+    heading.append(html('h3',{id:`layout-heading-${shot.id}`},`${String(index+1).padStart(2,'0')} / ${shot.name}`),html('span',{},`${selected===shot.id?'EDITING · ':''}${shot.id==='ending'?'FIXED END CARD':'SAVED DESIGN'}`));
     for(const v of SHOT_VARIANTS[baseShot(shot.id)]){
       const button=html('button',{class:'layout-option','data-shot':shot.id,'data-layout':v.id,'aria-label':`${shot.name} · ${v.name} layout`,'aria-pressed':String((variants[shot.id]??'original')===v.id),'data-active':String(selected===shot.id&&variants[shot.id]===v.id)}),mini=html('div',{class:'mini'});
       try{mini.append(renderShot(shot.id,thumbnailFrame(shot.id,v.id),payload,{variant:v.id,wireframe:player?.getWireframe()??true}));}

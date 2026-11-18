@@ -24,9 +24,9 @@ export function connectMotionPanel({getPayload,getShot,getVariant,applyMotion,pr
     const shot=getShot(),id=shot.id,original=getVariant(id)==='original',style=motionStyle(source()),settings=settingsFor(source(),id);
     $('motion-style').value=style;$('motion-cadence').value=String(playbackCadence(source()));$('refined-options').hidden=style!=='refined';
     const note=document.querySelector('.local-note');if(note)note.textContent=`960 × 540 · ${playbackCadence(source())} fps playback · 19 seconds. Each card stays editable.`;
-    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=original?(style==='refined'?'SMOOTH EXPERIMENT':'BASE44 STUDY'):'LEGACY LAYOUT';
+    $('motion-shot').textContent=shot.name;$('motion-lock').textContent=original?(style==='refined'?'SMOOTH EXPERIMENT':'BASE44 STUDY'):'SAVED LAYOUT';
     $('motion-cut').textContent=id==='ending'?'Adjust the logo build duration. Move or resize any layer below.':style==='refined'?'Previous smooth experiment. Use Base44 study for the reference motion.':'Stepped word reveals, measured card paths, sharp landings and held poses. Your Figma layouts stay editable.';
-    $('motion-fields').hidden=!original;$('motion-layout-note').hidden=original;$('motion-use-figma').hidden=original;
+    $('motion-fields').hidden=!original;$('motion-layout-note').hidden=original;$('motion-use-figma').hidden=true;
     $('cut-controls').hidden=id==='ending';$('cut-type').value=settings.cutType;$('cut-frames').value=settings.cutFrames;$('cut-duration-value').value=(settings.cutFrames/12).toFixed(2)+'s';$('cut-duration-field').hidden=settings.cutType==='cut';
     $('motion-reset').disabled=!original;
     $('motion-fields').replaceChildren();

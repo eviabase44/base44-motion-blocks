@@ -2,7 +2,7 @@
 
 **Show off v2:** the existing editor renders the revised Figma flow in 19 seconds: centered description and app entry, homepage scroll, feature bundle, three ranked feature pages, capability grid, and symbol-to-logo ending. Open [the v2 app](http://127.0.0.1:8782/index.html?version=2). [Asset handoff and related content](docs/asset-handoff.md) · [Base44 study restoration](docs/study-motion.md) · [Layout mapping](docs/figma-flow.md) · [Integration details](docs/v2-experiment.md). New sessions use **Base44 study · 12 fps** with held word reveals, source-derived card trajectories and hard cuts. The smooth experiment is archived as an explicit alternative. Saved or explicit presets take precedence; **Restore Base44 study motion** resets timing and cuts while preserving layer edits. Click elements to move, resize or nudge them; save all motion and layout tweaks locally or export/import a JSON preset. Feature signals remain simulated in the local test.
 
-A code-based editor for personalized, 15-second app showcase videos. Five independent shots share one app payload: copy, colors, font, and screen images. Choose from **17 layouts** and keep the fixed **“Proudly built on” + Base44 logo** ending.
+A code-based editor for personalized app showcase videos. **The saved v2 version has eight cards over 19 seconds, with one retained design per card.** The feature bundle retains the approved blue-background composition, alongside the other current cards. Alternate card layouts have been removed from the editor and AI planner. [Saved version details](docs/saved-version-2026-11-18.md). The original five-shot, 15-second API remains available.
 
 This repository contains the screenshot-based version and original preset compositions. It does not contain the reverted simulated app components or adaptive layout experiment.
 
@@ -27,10 +27,10 @@ The server binds to `127.0.0.1`. Set `PORT` to use a different local port. Open 
 ## What is included
 
 - Five shot modules: opening, app reveal, card burst, feature focus, and ending.
-- Four layouts per content shot and one fixed ending: 17 total.
+- One retained design per card, including the fixed Base44 ending.
 - A gallery under the editor, live copy/color/font controls, playback, looping, scrubbing, and frame stepping.
 - Wireframe, Forma, and Atlas sample payloads.
-- Public URL import, screen capture, AI-written copy, and AI selection from the existing layouts.
+- Public URL import, screen capture, AI-written copy, and automatic population of the retained layouts.
 - Authorized preview connections for apps that require sign-in.
 - JSON export and isolated shot embeds.
 - A deterministic SVG player: 960 × 540, 12 fps, 180 frames.
@@ -54,7 +54,7 @@ The provider status appears next to the URL field. Set `MOTION_AI_PROVIDER=none`
 
 Keys remain on the server. Extracted app text, labels, and brand candidates are sent to the configured AI provider. Screenshot bytes, browser cookies, and login sessions are not sent to the planner.
 
-Paste a public website/app URL, then select **Generate video**. The importer captures the rendered page, reads its content and brand, chooses layouts, and plays the generated sequence. Copy and selections remain editable. Login walls, anti-bot challenges, private-network addresses, and inaccessible pages require an authorized snapshot or return an error; the importer does not bypass them.
+Paste a public website/app URL, then select **Generate video**. The importer captures the rendered page, reads its content and brand, populates the saved layouts, and plays the generated sequence. Copy, media, and motion remain editable. Login walls, anti-bot challenges, private-network addresses, and inaccessible pages require an authorized snapshot or return an error; the importer does not bypass them.
 
 ## Integrate into a product
 
@@ -66,10 +66,10 @@ const player = await createMotionPlayer(document.querySelector('#animation'), {
   payload,
   sequence: ['hook', 'reveal', 'collage', 'focus', 'ending'],
   variants: {
-    hook: 'dark-statement',
-    reveal: 'screen-stage',
-    collage: 'fragment-field',
-    focus: 'six-week',
+    hook: 'original',
+    reveal: 'original',
+    collage: 'original',
+    focus: 'original',
   },
   wireframe: true,
 });
@@ -105,7 +105,7 @@ npm test
 npm start
 ```
 
-Edit `src/shots/` for shot rendering, `src/variants.js` for the layout catalog, `src/studio.js` for the editor, and `backend/` for URL import and planning. The main gallery is `variants.html`.
+Edit `src/shots/` for shot rendering, `src/variants.js` for the layout catalog, `src/studio.js` for the editor, and `backend/` for URL import and planning. The saved-card gallery sits below the editor. Old `variants.html` links redirect there. Known legacy layout selections normalize to the retained set; archived render metadata remains only for checkpoint compatibility.
 
 After editing:
 

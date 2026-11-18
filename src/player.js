@@ -85,7 +85,7 @@ export async function createMotionPlayer(container,{payload,shot='hook',sequence
     setLoop(value){loop=Boolean(value);onFrame(state());},
     setSequence(ids){const next=ids.slice();if(!next.length)throw new Error('Sequence cannot be empty');next.forEach(id=>spec(id));this.pause();order=next;total=order.reduce((n,id)=>n+spec(id).frames,0);frame=0;draw();},
     setShot(id){spec(id);this.setSequence([id]);},
-    setVariant(id,variant){getVariant(id,variant);renderShot(id,spec(id).frames-1,app,{wireframe,variant});layouts={...layouts,[id]:variant};draw();},
+    setVariant(id,variant){getVariant(id,variant);const next=normalizeVariants({...layouts,[id]:variant});renderShot(id,spec(id).frames-1,app,{wireframe,variant:next[id]});layouts=next;draw();},
     setSound(value){sound=Boolean(value);syncAudio(true);},
     getVariants(){return {...layouts};},
     setMotion(value){if(!app.showcase)throw Error('Animation controls require the v2 flow.');const motion=validateMotion(value);revision++;app={...app,showcase:{...app.showcase,motion}};draw();},

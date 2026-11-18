@@ -1,7 +1,7 @@
 import {getShot,SHOTS} from './contracts.js';
 
 // New choices reconstruct specific approved reference shots; outputs remain for review.
-export const SHOT_VARIANTS={
+const ARCHIVED_VARIANTS={
   "hook": [
     {
       "id": "original",
@@ -243,17 +243,21 @@ export const SHOT_VARIANTS={
   ]
 };
 
-SHOT_VARIANTS.capabilities=[{id:'original',name:'Figma capability grid',description:'The supplied left and right arrangements, with app images and feature cards.'}];
+ARCHIVED_VARIANTS.capabilities=[{id:'original',name:'Figma capability grid',description:'The supplied left and right arrangements, with app images and feature cards.'}];
+// Saved 2026-11-18. Only this selected set is offered by the editor and planner.
+// Archived metadata remains readable for old render/checkpoint compatibility.
+export const RETAINED_LAYOUTS=Object.freeze({hook:'original',reveal:'original',collage:'original',focus:'original',focus2:'original',focus3:'original',capabilities:'original',ending:'original'});
+export const SHOT_VARIANTS=Object.fromEntries(Object.entries(ARCHIVED_VARIANTS).map(([shot,list])=>[shot,list.filter(v=>v.id===RETAINED_LAYOUTS[shot])]));
 export function getVariant(shot,id='original'){
   const family=shot==='focus2'||shot==='focus3'?'focus':shot;
   if(family!=='capabilities')getShot(family);
-  const variant=SHOT_VARIANTS[family].find(v=>v.id===id);
+  const variant=ARCHIVED_VARIANTS[family].find(v=>v.id===id);
   if(!variant)throw new Error(`Unknown layout ${id} for ${shot}`);
   return variant;
 }
 export function normalizeVariants(variants={}){
   for(const [shot,id]of Object.entries(variants))getVariant(shot,id);
-  return {...Object.fromEntries(SHOTS.map(s=>[s.id,variants[s.id]??'original'])),...Object.fromEntries(['focus2','focus3','capabilities'].filter(id=>variants[id]).map(id=>[id,variants[id]]))};
+  return {...Object.fromEntries(SHOTS.map(s=>[s.id,RETAINED_LAYOUTS[s.id]])),...Object.fromEntries(['focus2','focus3','capabilities'].filter(id=>variants[id]).map(id=>[id,RETAINED_LAYOUTS[id]]))};
 }
 export function encodeVariants(variants){
   return Object.entries(normalizeVariants(variants)).filter(([,id])=>id!=='original').map(([shot,id])=>`${shot}:${id}`).join(',');
